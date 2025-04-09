@@ -19,6 +19,10 @@ The task details will be in the implementation directory.
 Time estimates are omitted for this short sprint of everything
 neededing to be finished within a week considering external factors.
 
+All components will have unit tests.
+There will be integration tests for the themes "summarize abstract",
+"evaluate summary", "evaluate logs and feedback".
+
 Stories:
 
 (1) logging
