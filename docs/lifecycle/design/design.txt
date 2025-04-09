@@ -47,6 +47,14 @@ Stories:
      if harmful is selected, user has ability to send email to support
      and to request a response if they provide their email
 (11) code for evaluating the logs and feedback
+(12) internal function to create seed data for the notebook logs
+     and feedback directories, usable for evaluation
+(13) paste the tested code into the Kaggle notebook 
+     documenting the pieces and goals
+(14) generate the seed data for logs and feedback for evals
+(15) run and save the notebook
+(16) remove the seed data generation method as it detracts from the
+     notebook explanations
 
 Main Agent cell as UML Sequence diagram (column timelines are implied):
 
