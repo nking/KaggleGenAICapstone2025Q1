@@ -1,13 +1,15 @@
 import secrets
 import os
 
-def get_session_id():
-
+def get_session_filepath():
   base_dir = os.environ.get('PWD')
   if not base_dir.startswith("/kaggle/working"):
     base_dir += "/bin/"
+  return base_dir + "/_session_id"
 
-  _session_file = base_dir + "/_session_id"
+def get_session_id():
+
+  _session_file = get_session_filepath()
 
   if not os.path.exists(_session_file):
     #128 bit session id

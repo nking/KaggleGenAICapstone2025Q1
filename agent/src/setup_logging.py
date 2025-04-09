@@ -15,13 +15,14 @@ if not working_dir.startswith("/kaggle/working"):
     working_dir += "/bin/"
 
 log_dir = working_dir + 'data/log/'
+agent_flpath = log_dir + "agent.log"
 feedback_dir = working_dir + 'data/feedback/'
 
 if not os.path.exists(feedback_dir):
   os.makedirs(log_dir, exist_ok=True)
   os.mkdir(feedback_dir)
 
-def get_logger(log_fln : str, logger_name : str) -> logging.Logger:
+def get_logger(log_flpath : str, logger_name : str) -> logging.Logger:
   '''
   Args:
      log_fln - local log file name
@@ -31,7 +32,7 @@ def get_logger(log_fln : str, logger_name : str) -> logging.Logger:
   '''
   logger = logging.getLogger(logger_name)
   logger.setLevel(logging.DEBUG)
-  handler = ConcurrentRotatingFileHandler(log_fln, maxBytes=8*1024*1024, backupCount=5)
+  handler = ConcurrentRotatingFileHandler(log_flpath, maxBytes=8*1024*1024, backupCount=5)
   #formatter = logging.Formatter('%(asctime)s - %(message)s')
   formatter = logging.Formatter('%(message)s')
   handler.setFormatter(formatter)
@@ -39,13 +40,13 @@ def get_logger(log_fln : str, logger_name : str) -> logging.Logger:
   return logger
 
 def get_agent_logger():
-    return get_logger(log_dir, "agent")
+    return get_logger(agent_flpath, "agent")
 
 def get_timestamp():
   return time.time_ns()
 
-def log_step(logger : logging.Logger, msg : str, session_id: str):
-  logger.info(f"{get_timestamp()} {session_id} {msg}")
+def log_step(logger : logging.Logger, session_id: str, msg : str):
+  logger.info(f"{get_timestamp()} {session_id} {msg}\n")
 
 def store_user_feedback(msg : str, session_id : str):
   log = get_logger(feedback_dir, "feedback")
