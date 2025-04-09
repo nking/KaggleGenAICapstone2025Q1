@@ -17,9 +17,13 @@ if not working_dir.startswith("/kaggle/working"):
 log_dir = working_dir + 'data/log/'
 agent_flpath = log_dir + "agent.log"
 feedback_dir = working_dir + 'data/feedback/'
+feedback_flpath = feedback_dir + "feedback.log"
+llm_eval_dir = working_dir + 'data/evals/'
+llm_eval_flpath = llm_eval_dir + "llm.log"
 
 if not os.path.exists(feedback_dir):
   os.makedirs(log_dir, exist_ok=True)
+  os.mkdir(llm_eval_dir)
   os.mkdir(feedback_dir)
 
 def get_logger(log_flpath : str, logger_name : str) -> logging.Logger:
@@ -42,14 +46,24 @@ def get_logger(log_flpath : str, logger_name : str) -> logging.Logger:
 def get_agent_logger():
     return get_logger(agent_flpath, "agent")
 
+def get_llm_eval_logger():
+  return get_logger(llm_eval_flpath, "llm_eval")
+
+def get_feedback_logger():
+  return get_logger(feedback_flpath, "feedback")
+
 def get_timestamp():
   return time.time_ns()
 
 def log_step(logger : logging.Logger, session_id: str, msg : str):
   logger.info(f"{get_timestamp()} {session_id} {msg}\n")
 
-def store_user_feedback(msg : str, session_id : str):
-  log = get_logger(feedback_dir, "feedback")
+def store_user_feedback(session_id: str, msg : str):
+  log = get_feedback_logger()
+  log.info(f"{get_timestamp()} {session_id} {msg}")
+
+def store_llm_eval(session_id: str, msg : str):
+  log = get_llm_eval_logger()
   log.info(f"{get_timestamp()} {session_id} {msg}")
 
 for dirname, _, filenames in os.walk("."):

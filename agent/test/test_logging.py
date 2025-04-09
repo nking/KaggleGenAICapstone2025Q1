@@ -17,18 +17,30 @@ class TestSessionId(unittest.TestCase):
     msg = "abstract=asdfghj"
     result['log_step'](agent_logger, session_id, msg)
 
-    content = self._read_agent_logfile(result['agent_flpath'])
+    content = self._read_file(result['agent_flpath'])
     self.assertIsNotNone(content)
     self.assertTrue(content.endswith(msg))
 
-  def _read_agent_logfile(self, agent_flpath:str):
+    msg = 5
+    result['store_llm_eval'](session_id, msg)
+    content = self._read_file(result['llm_eval_flpath'])
+    self.assertIsNotNone(content)
+    self.assertTrue(content.endswith(msg))
+
+    msg = 5
+    result['store_user_feedback'](session_id, msg)
+    content = self._read_file(result['feedback_flpath'])
+    self.assertIsNotNone(content)
+    self.assertTrue(content.endswith(msg))
+
+  def _read_file(self, flpath:str):
     try:
-      with open(agent_flpath, 'r') as infile:
+      with open(flpath, 'r') as infile:
         return infile.read().strip()
     except FileNotFoundError:
-      print(f"{agent_flpath} not found\n")
+      print(f"{flpath} not found\n")
     except ValueError:
-      print(f"Error: Invalid content in {agent_flpath}.\n")
+      print(f"Error: Invalid content in {flpath}.\n")
 
 
 if __name__ == '__main__':

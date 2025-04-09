@@ -11,7 +11,10 @@ Agile stories and tasks.
     agent/src/session_id.py
     agent/test/test_session_id.py
 (3) prompt
-    provide a prompt to the LLM to summarize the text for readability
+    provide a prompt to the LLM to summarize the text for readability.
+    can provide as a resource or as the result of a get method.
+    agent/src/prompt.py
+    agent/test/test_prompt.py
 (4) clinical trial request function
     makes API request for published completed trial for disease treatement,
     rehibilition, prevention, therapy
