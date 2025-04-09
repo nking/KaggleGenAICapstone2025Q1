@@ -1,0 +1,118 @@
+This file outlines the requirements and use cases for the project.
+========================================================================
+Agent requirements:
+------------------
+
+The agent should find the clinical trial results for the disease the
+user submits a query for and present them as choices for the user.
+
+(Note that due to Kaggle requirements that the notebook run from start 
+to finish within a session, the disease will be selected randomly from a 
+list of diseases).
+
+The agent should present the trials with numbered choices to select the 
+trial, start over, or end the search.
+
+The agent, receiving a numbered choice that is a trial, fetches the
+resulting publication abstract and feeds it to the LM agent for text
+summarization along with a prompt or instruction to return a summary.
+The prompt or instruction will be modified to return easy to understand
+results that are also detailed enough to be meaningful.
+
+The agent will print the summary for the user along with the publication
+citation as title, authors, journal, date and a url. 
+
+The agent will also present an option of feedback from users.
+
+The steps that the agent uses will be logged for QA.  
+The input and output number of tokens to the LLM will be logged.
+
+
+Contest requirements:
+--------------------
+
+The code must be presented in a Kaggle notebook
+
+The code must cover at least 3 of the gen AI capabilities covered in the
+course.
+   These are covered in this project:
+      Document understanding
+      Function Calling
+      Agents
+      Gen AI evaluation
+      Grounding
+      Retrieval augmented generation (RAG)
+      MLOps (with GenAI)
+
+Ideally, the code should solve a real world problem.
+
+The Kaggle notebook must work without errors when executed end-to-end.
+
+The notebook should be clearly documented.
+The notebook should begin with the use case/problem and explanation of how
+gen AI solves the problem.
+The notebook should implement the explained solution.
+
+Optionally: 
+
+a blogpost: a public blogpost on your capstone project. Think of this 
+blogpost as an opportunity to explain what use case you chose, what 
+problem/idea you were trying to solve, and how you solve it with Gen AI.
+
+a YouTube video: a public YouTube video on your capstone project. No 
+minimum or maximum duration.
+
+========================================================================
+
+Use Case:
+ 
+A user is prompted to enter a disease.
+The user is presented with a list of trial titles.
+The user chooses from among the list and a summary text of the trial results 
+publication abstract is presented in everyday terms, understandable to 
+readers that do not have a medical degree.
+
+
+Use Case:
+
+A user reads the abstract results and provides feedback which is later used 
+in QA.
+
+
+Use Case:
+
+Characteristics of a user's session are logged for QA and alerts, but in a
+manner that does not include their identity.
+
+========================================================================
+
+Future considerations:
+1) ability to translate
+2) inclusion of other country databases (the Who does not have an API,
+   but there are british, african, and european trial databases)
+3) ability to save or export results
+4) ability to search on more features such as year range
+
+========================================================================
+
+Misc:
+
+List of gen AI capabilities, among which at least 3 must be chosen:
+
+Structured output/JSON mode/controlled generation
+Few-shot prompting
+Document understanding
+Image understanding
+Video understanding
+Audio understanding
+Function Calling
+Agents
+Long context window
+Context caching
+Gen AI evaluation
+Grounding
+Embeddings
+Retrieval augmented generation (RAG)
+Vector search/vector store/vector database
+MLOps (with GenAI)
+
