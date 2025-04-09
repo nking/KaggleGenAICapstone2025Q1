@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+NIH_API_KEY.txt
+agent/testresources/NIH_API_KEY.txt
+
 # C extensions
 *.so
 
