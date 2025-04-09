@@ -1,0 +1,165 @@
+This file contains notes on data characteristics, the choice of LLMs,
+deployment frameworks, infrastructures, security, logging, scalability.
+========================================================================
+
+This notebook is a prototype that will use Kaggle resources and the tools 
+provided by the course.  
+
+If the goal were to build a scalable, low latency agent deployed to the
+cloud, one could instead use the Vertex AI tools (and even the 
+AgentBuilder) also presented in the course ($1000 credit for using the
+AgentBuilder is currently offered!).
+
+========================================================================
+Data:
+---------
+
+Kaggle limits to data storage for a notebook is <= 20 GB.
+Session data is stored at /kaggle/
+Data persisted beyond a session is stored at /kaggle/working/ but it is
+specific to a user.
+
+"Each time a Kaggle notebook is run, it utilizes a fresh instance of a 
+Docker container, derived from a pre-built Docker image. This means that 
+every session operates in an isolated environment, ensuring that changes 
+or processes from previous runs do not interfere with the current one."
+
+The url data fetches:
+    clinical trial request:
+       200 kB
+    clinical trial response containing 10 trial fetched from clinical 
+    database API in bytes:
+        100 MB
+    chosen trial publication abstract size:
+        1 MB
+    publication request:
+       200 kB
+    publication response:
+        100 MB <--- might need revision
+
+LLM tokens:
+    input for 1 article ~ 250 tokens
+    output for 1 article ~ 350 tokens
+
+    20 articles per user session ~ input: 5000 tokens, output: 7000 tokens
+
+Request Rates:
+-------------
+    avg at time of eval: 10-100 requests / day?
+    worst case: 250000 requests / day: 
+
+The data storage will have to be restricted to the session id,
+request urls, and the LLM abstract summary.
+for 1 user session:
+    req sums ~ 1 MB
+    LLM abstract 1 MB (could compress, gain at most factor of 1/2)
+for 100, that is 2MB * 100 = 0.2 GB per day
+
+Ideally, these would be stored asynchronously in cloud storage (the
+Google Cloud storage and Vertex AI options would be most compatible
+with the production version of this notebook).
+
+For this prototype, the Kaggle local working directory storage will be 
+used and will be the source used for evaluations.
+Which also means that the latest saved version of the Kaggle notebook
+must contain seed logs and feedback in order to demonstrate the 
+evaluations.
+
+========================================================================
+
+LLMs:
+----
+
+Gemini-1.5-flash
+    Strengths:
+        SOTA, Handles long context well, Ability to fine-tune, context 
+        caching
+    Weaknesses: 
+        No grounding w/ google search
+    Costs:
+        Free pricing: 15 RPM, 1000000 TPM,   1500 RPD
+    Paid input: 
+        $0.075, prompts <= 128k tokens
+        $0.15, prompts > 128k tokens 
+        Note that Gemini 1.5 Flash-8B are half that cost for smaller model
+    Paid output:
+        $0.30, prompts <= 128k tokens
+        $0.60, prompts > 128k tokens
+        Note that Gemini 1.5 Flash-8B are half that cost for smaller model
+
+Gemma 3 1B (text only)  not hosted, so download to local env.or deploy to a host
+    Strengths:
+        Lightweight, free 
+    Weaknesses:
+        No grounding, possibly lower quality results than gemini-1.5-flash for 
+        this project's content
+        No ability to find-tune
+    Costs:
+        Free pricing: 15 RPM, 1000000 TPM,   1500 RPD
+    No Paid input: 
+
+
+Analysis:
+
+    Choosing Gemini-1.5-flash for now due to performance and free tier options.
+
+    Evaluate also Gemini-1.5-flash and Gemma 3 1B as alternatives for high traffic.
+
+========================================================================
+Security:
+---------
+
+Integrity of data at all steps.
+    - best practices for sending requests and use of the third part
+      APIs will be followed.
+    
+Integrity of logs.
+    - protected by Kaggle
+
+Protection of user from harmful content.
+    - monitoring of user feedback for alarming results
+
+The user identity is not stored in any manner, and so regulations such
+as GDPR, CCPA, HIPAA are implicitly followed.
+
+========================================================================
+Prompts:
+---------
+the model prompt should be present in version control.
+version control branches will be used to help provide ability to mix 
+different agent component versions to produce a new total system.
+
+the tests are integration tests that the LLM response is well formed,
+correct, a combination of serious and friendly, somewhat succint.
+
+prompts should be compared to instructions for resulting summaries
+if have time to implement (optional).
+
+evaluations:
+   - human feedback can be used to asses quality of summary, given queries
+   - another agent should be used to rate the results.
+
+monitor:
+   - the requests and the number of items in reponse.
+   - user feedback
+     - send an email alert if feedback for "harmful" content is made
+
+measure drift:
+   - any wrong responses in the chain?  that is, user feedback for wrong responses?
+   - a response of 0 items for all requests would suggest an API has changed
+
+========================================================================
+RAG, Factual Grounding:
+----------------------
+
+The trial and article requests and responses result in a user chosen
+trail result abstract that is the main content that the LLM will summarize
+given the prompt and the abstract.
+
+========================================================================
+Agent Functions:
+---------------
+
+The agent will be invoken client-side functions to fetch the trials and
+article chosen by the user.
+

@@ -1,0 +1,9 @@
+This file outlines non-functional requirements.
+
+The agent should respond to each step within a few seconds.
+
+The system should handle concurrency of requests, and ideally
+also in logging.
+
+The system should not store user identity.
+

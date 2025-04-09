@@ -1,7 +1,11 @@
-This file outlines the requirements and use cases for the project.
+This file outlines the "functional" requirements and use cases for the 
+project.
+In a separate file, the "non-functional" requirements such as latency.
 ========================================================================
-Agent requirements:
-------------------
+Agent component requirements:
+----------------------------
+
+The text presented to user should be serious in tone and succint.
 
 The agent should find the clinical trial results for the disease the
 user submits a query for and present them as choices for the user.
@@ -17,7 +21,8 @@ The agent, receiving a numbered choice that is a trial, fetches the
 resulting publication abstract and feeds it to the LM agent for text
 summarization along with a prompt or instruction to return a summary.
 The prompt or instruction will be modified to return easy to understand
-results that are also detailed enough to be meaningful.
+results that are also detailed enough to be meaningful.  The tone should
+also be serious and friendly.
 
 The agent will print the summary for the user along with the publication
 citation as title, authors, journal, date and a url. 
@@ -26,6 +31,15 @@ The agent will also present an option of feedback from users.
 
 The steps that the agent uses will be logged for QA.  
 The input and output number of tokens to the LLM will be logged.
+
+Integrity of data at all steps.
+
+Integrity of logs.
+
+Protection of user from harmful content.
+
+The user identity is not stored in any manner, and so regulations such
+as GDPR, CCPA, HIPAA are implicitly followed.
 
 
 Contest requirements:
@@ -87,11 +101,12 @@ manner that does not include their identity.
 ========================================================================
 
 Future considerations:
-1) ability to translate
-2) inclusion of other country databases (the Who does not have an API,
+1) accessibility for users with disabilities.
+2) ability to translate
+3) inclusion of other country databases (the Who does not have an API,
    but there are british, african, and european trial databases)
-3) ability to save or export results
-4) ability to search on more features such as year range
+4) ability to save or export results
+5) ability to search on more features such as year range
 
 ========================================================================
 
