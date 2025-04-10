@@ -13,17 +13,25 @@ Agile stories and tasks.
 (3) prompt
     provide a prompt to the LLM to summarize the text for readability.
     can provide as a resource or as the result of a get method.
+    DONE
     agent/src/prompt.py
     agent/test/test_prompt.py
 (4) clinical trial request function
     makes API request for published completed trial for disease treatement,
     rehibilition, prevention, therapy
-(5) clinical trial parser and filter function
+    clinical trial parser and filter function
     parses the trial results and filters out any missing citations
+    DONE
+    agent/src/HttpsRequester.py
+    agent/src/trials.py
+    agent/test/test_trials.py
 (6) publication request function
     makes API request for the abstract of the citation
-(7) public parser function
+    publication parser function
     parse response and return abstract
+    DONE
+    agent/src/article.py
+    agent/test/test_article.py
 (8) code for LLM summization given prompt and article and presentation
     the notebook code to use the LLM for text summarization
     and to present the results
