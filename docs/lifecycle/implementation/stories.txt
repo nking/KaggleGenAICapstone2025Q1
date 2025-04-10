@@ -48,8 +48,9 @@ Agile stories and tasks.
 (13) paste the tested code into the Kaggle notebook 
      documenting the pieces and goals
 (14) generate the seed data for logs and feedback for evals
-(15) run and save the notebook
-(16) remove the seed data generation method as it detracts from the
+(15) a more thorough look through the code and system for exception handling
+(16) run and save the notebook
+(17) remove the seed data generation method as it detracts from the
      notebook explanations
 
 Main Agent cell as UML Sequence diagram (column timelines are implied):
