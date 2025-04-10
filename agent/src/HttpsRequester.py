@@ -12,16 +12,19 @@ class HttpsRequester:
 
   def send_req(self, url_str: str) -> str:
     '''
-     given the API string, return the response
+     given the API string, return the response.
+     throws exception upon error.  catch the exception and retry if it appears to be a rate limit
+     violation from concurrent notebook images, else use alerts for notifying support.
 
      Args:
          url_str  is the full API url
-
+     Throws:
+         exception
      Returns:
          the result as a string
      '''
     if self.last_req_time:
-      # these are in time units of seconds
+      # time units are seconds
       delta = time.clock_gettime(time.CLOCK_REALTIME) - self.last_req
       if delta < 1:
         time.sleep(1)
@@ -44,4 +47,4 @@ class HttpsRequester:
         #print('Request successful!')
         return response.content
       n_tries += 1
-    return error_str
+    raise Exception(error_str)
