@@ -1,14 +1,21 @@
 #!pip install -q requests
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3 import Retry
 import time
-import os
-from urllib.parse import urlparse
 
 class HttpsRequester:
-  last_req_time: int = None
-  max_fails: int = 2
-  def __init__(self):
-    pass
+  '''
+  send an https or http request given a url, a max number of 3 retries and a backoff factor of 1.  (no handling of post data)
+  '''
+  def __init__(self, max_retries : int = 3):
+    self.session = requests.Session()
+    # Delay between retries: {backoff factor} * (2 ** ({retry number} - 1))
+    retries = Retry(total=max_retries,  backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504], \
+      allowed_methods=["HEAD", "TRACE", "GET", "PUT", "OPTIONS", "DELETE", "POST"])  # Methods to retry
+    adapter = HTTPAdapter(max_retries=retries)
+    self.session.mount('http://', adapter)
+    self.session.mount('https://', adapter)
 
   def send_req(self, url_str: str) -> str:
     '''
@@ -23,28 +30,16 @@ class HttpsRequester:
      Returns:
          the result as a string
      '''
-    if self.last_req_time:
-      # time units are seconds
-      delta = time.clock_gettime(time.CLOCK_REALTIME) - self.last_req
-      if delta < 1:
-        time.sleep(1)
-    self.last_req = time.clock_gettime(time.CLOCK_REALTIME)
-
-    n_tries = 0
     error_str = None
-    while n_tries < self.max_fails:
-      try:
-        response = requests.get(url_str)
-      except requests.exceptions.HTTPError as err:
-        #print('HTTP error occurred:', err)
-        error_str = str(err)
-        return None
-      except Exception as err:
-        #print('Other error occurred:', err)
-        error_str = str(err)
-        return None
-      if response.status_code == 200:
-        #print('Request successful!')
-        return response.content
-      n_tries += 1
+    try:
+      response = requests.get(url_str)
+    except Exception as err:
+      #print('Other error occurred:', err)
+      error_str = str(err)
+      i = error_str.find("Caused by")
+      error_str = error_str[i:]
+      return None
+    if response.status_code == 200:
+      #print('Request successful!')
+      return response.content
     raise Exception(error_str)

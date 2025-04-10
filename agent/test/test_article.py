@@ -1,9 +1,12 @@
 import unittest
 from urllib.parse import urlparse
 import os
-from ..src import article
-from ..src.HttpsRequester import HttpsRequester
+#from ..src import article
+#from ..src.HttpsRequester import HttpsRequester
 from . import NIH_API_KEY
+from . import HasInternetConnection
+import article
+import HttpsRequester
 
 class TestTrials(unittest.TestCase):
   def test_create_url(self):
@@ -26,13 +29,14 @@ class TestTrials(unittest.TestCase):
     self.assertIsNotNone(abstract)
 
   def test_parse_req_parse_xml(self):
-    pmid = 21976132
-    API_KEY = NIH_API_KEY.get_NIH_API_KEY()
-    url_str = article.get_pubmed_request_url(pmid, API_KEY)
-    req = HttpsRequester()
-    content = req.send_req(url_str)
-    abstract = article.parse_and_filter(content)
-    self.assertIsNotNone(abstract)
+    if HasInternetConnection.have_internet():
+      pmid = 21976132
+      API_KEY = NIH_API_KEY.get_NIH_API_KEY()
+      url_str = article.get_pubmed_request_url(pmid, API_KEY)
+      req = HttpsRequester.HttpsRequester()
+      content = req.send_req(url_str)
+      abstract = article.parse_and_filter(content)
+      self.assertIsNotNone(abstract)
 
   def _read_xml_response_1(self):
     working_dir = os.environ.get('PWD')

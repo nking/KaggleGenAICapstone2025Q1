@@ -17,26 +17,26 @@ class TestSessionId(unittest.TestCase):
     msg = "abstract=asdfghj"
     result['log_step'](agent_logger, session_id, msg)
 
-    content = self._read_file(result['agent_flpath'])
+    content = self._read_file_last_line(result['agent_flpath'])
     self.assertIsNotNone(content)
     self.assertTrue(content.endswith(msg))
 
-    msg = 5
+    msg = str(os.urandom(128))
     result['store_llm_eval'](session_id, msg)
-    content = self._read_file(result['llm_eval_flpath'])
+    content = self._read_file_last_line(result['llm_eval_flpath'])
     self.assertIsNotNone(content)
     self.assertTrue(content.endswith(msg))
 
-    msg = 5
+    msg = str(os.urandom(128))
     result['store_user_feedback'](session_id, msg)
-    content = self._read_file(result['feedback_flpath'])
+    content = self._read_file_last_line(result['feedback_flpath'])
     self.assertIsNotNone(content)
     self.assertTrue(content.endswith(msg))
 
-  def _read_file(self, flpath:str):
+  def _read_file_last_line(self, flpath:str):
     try:
       with open(flpath, 'r') as infile:
-        return infile.read().strip()
+        return infile.readlines()[-1].strip()
     except FileNotFoundError:
       print(f"{flpath} not found\n")
     except ValueError:

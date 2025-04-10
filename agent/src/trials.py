@@ -48,8 +48,11 @@ def parse_and_filter(json_resp : str):
           if 'pmid' in pmid_dict:
             citations.append({"pmid":pmid_dict["pmid"], "citation": pmid_dict["citation"]})
       if len(citations) > 0:
-        out.append({'briefTitle' : study['protocolSection']['identificationModule']['briefTitle'], \
-          'officialTitle' : study['protocolSection']['identificationModule']['officialTitle'], 'citations' : citations})
+        # parse for organization
+        out.append({'briefTitle' : pr['identificationModule']['briefTitle'], \
+          'officialTitle' : pr['identificationModule']['officialTitle'], \
+          'organization' : pr['identificationModule']['organization']['fullName'],\
+          'citations' : citations})
   except json.JSONDecodeError as e:
     print(f"Error decoding JSON: {e}")
     raise e

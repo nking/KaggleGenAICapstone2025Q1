@@ -1,5 +1,6 @@
 import unittest
-from ..src import prompt
+
+import prompt
 
 class TestPrompt(unittest.TestCase):
   def test_script_execution(self):

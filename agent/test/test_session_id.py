@@ -1,5 +1,6 @@
 import unittest
-from ..src import session_id
+import os
+import session_id
 
 class TestSessionId(unittest.TestCase):
   def test_script_execution(self):

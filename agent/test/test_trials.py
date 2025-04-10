@@ -1,8 +1,11 @@
 import unittest
 from urllib.parse import urlparse
 import os
-from ..src import trials
-from ..src.HttpsRequester import HttpsRequester
+from . import HasInternetConnection
+#from ..src import trials
+#from ..src.HttpsRequester import HttpsRequester
+import trials
+import HttpsRequester
 
 class TestTrials(unittest.TestCase):
   def test_create_url(self):
@@ -25,23 +28,26 @@ class TestTrials(unittest.TestCase):
     for result in results_list:
       self.assertTrue(result['briefTitle'])
       self.assertTrue(result['officialTitle'])
+      self.assertTrue(result['organization'])
       self.assertTrue(result['citations'])
       self.assertTrue(result['citations'][0]['pmid'])
       self.assertTrue(result['citations'][0]['citation'])
 
   def test_parse_req_parse_json(self):
-    disease = "prostate cancer"
-    url_str = trials.get_trial_request_url(disease)
-    req = HttpsRequester()
-    content = req.send_req(url_str)
-    results_list, nextPageToken = trials.parse_and_filter(content)
-    self.assertIsNotNone(nextPageToken)
-    for result in results_list:
-      self.assertTrue(result['briefTitle'])
-      self.assertTrue(result['officialTitle'])
-      self.assertTrue(result['citations'])
-      self.assertTrue(result['citations'][0]['pmid'])
-      self.assertTrue(result['citations'][0]['citation'])
+    if HasInternetConnection.have_internet():
+      disease = "prostate cancer"
+      url_str = trials.get_trial_request_url(disease)
+      req = HttpsRequester.HttpsRequester()
+      content = req.send_req(url_str)
+      results_list, nextPageToken = trials.parse_and_filter(content)
+      self.assertIsNotNone(nextPageToken)
+      for result in results_list:
+        self.assertTrue(result['briefTitle'])
+        self.assertTrue(result['officialTitle'])
+        self.assertTrue(result['organization'])
+        self.assertTrue(result['citations'])
+        self.assertTrue(result['citations'][0]['pmid'])
+        self.assertTrue(result['citations'][0]['citation'])
 
   def _read_json_response_1(self):
     working_dir = os.environ.get('PWD')

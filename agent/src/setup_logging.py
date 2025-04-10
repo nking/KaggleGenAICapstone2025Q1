@@ -18,7 +18,7 @@ log_dir = working_dir + 'data/log/'
 agent_flpath = log_dir + "agent.log"
 feedback_dir = working_dir + 'data/feedback/'
 feedback_flpath = feedback_dir + "feedback.log"
-llm_eval_dir = working_dir + 'data/evals/'
+llm_eval_dir = working_dir + 'data/eval/'
 llm_eval_flpath = llm_eval_dir + "llm.log"
 
 if not os.path.exists(feedback_dir):
@@ -56,15 +56,15 @@ def get_timestamp():
   return time.time_ns()
 
 def log_step(logger : logging.Logger, session_id: str, msg : str):
-  logger.info(f"{get_timestamp()} {session_id} {msg}\n")
+  logger.info(f"{get_timestamp()} {session_id} {msg}")
 
 def store_user_feedback(session_id: str, msg : str):
-  log = get_feedback_logger()
-  log.info(f"{get_timestamp()} {session_id} {msg}")
+  logger = get_feedback_logger()
+  logger.info(f"{get_timestamp()} {session_id} {msg}")
 
 def store_llm_eval(session_id: str, msg : str):
-  log = get_llm_eval_logger()
-  log.info(f"{get_timestamp()} {session_id} {msg}")
+  logger = get_llm_eval_logger()
+  logger.info(f"{get_timestamp()} {session_id} {msg}")
 
 for dirname, _, filenames in os.walk("."):
   for filename in filenames:
