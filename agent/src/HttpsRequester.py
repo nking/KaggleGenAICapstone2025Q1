@@ -21,10 +21,10 @@ class HttpsRequester:
          the result as a string
      '''
     if self.last_req_time:
+      # these are in time units of seconds
       delta = time.clock_gettime(time.CLOCK_REALTIME) - self.last_req
-      if delta < 2:
-        # TODO: considering sleeping  math.round(2-delta)
-        time.sleep(2)
+      if delta < 1:
+        time.sleep(1)
     self.last_req = time.clock_gettime(time.CLOCK_REALTIME)
 
     n_tries = 0

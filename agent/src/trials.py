@@ -3,7 +3,7 @@ import json
 
 def get_trial_request_url(disease: str) -> str:
   '''
-  makes an API call to clinical trials US gov for completed trials that have results for the disease
+  makes the url for an API call to clinical trials US gov for completed trials that have results for the disease
   and have prevention or treatment (or synonyms) in their titles or documentation.
   see https://clinicaltrials.gov/data-api/api
   Args:
