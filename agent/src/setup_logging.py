@@ -77,8 +77,3 @@ def log_agent(session_id: str, msg : str, logger: logging.Logger = None):
   if logger is None:
     logger = get_agent_logger()
   logger.info(f"{get_timestamp()}|{session_id}|{msg}")
-
-for dirname, _, filenames in os.walk("."):
-  for filename in filenames:
-    print(os.path.join(dirname, filename))
-

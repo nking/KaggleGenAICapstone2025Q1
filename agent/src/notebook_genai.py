@@ -1,9 +1,10 @@
 #!pip install -Uq "google-genai==1.7.0"
 #from kaggle_secrets import UserSecretsClient
 
-#code adatped from notebooks from Google/Kaggle 5-day GenAI course 2025Q1
+#code adapted from notebooks from Google/Kaggle 5-day GenAI course 2025Q1
 # https://www.kaggle.com/code/markishere/day-1-evaluation-and-structured-output
 # and other notebooks
+#    https://cloud.google.com/vertex-ai/generative-ai/docs/models/metrics-templates#pairwise_coherence
 
 import time
 from google import genai
@@ -38,7 +39,8 @@ def get_genAI_client(AI_Studio_API_Key : str) -> genai.Client:
   return client
 
 def evaluate_the_summary(session_id : str, query_number : int, \
-  client : genai.Client,  prompt, summary, model_str : str = 'gemini-1.5-flash') :
+  client : genai.Client,  prompt, summary, model_str : str = 'gemini-1.5-flash',\
+  verbose : int = 0) :
   '''
   Evaluate the generated summary against the prompt used
   based upon Groundedness, Conciseness, and Fluency
@@ -88,11 +90,15 @@ def evaluate_the_summary(session_id : str, query_number : int, \
 
   log_llm_eval(session_id=session_id, msg=f'q={query_number}|eval={structured_eval}')
 
+  if verbose > 0:
+    print(f'verbose_eval=\n{verbose_eval}\n')
+    print(f'structured_eval=\n{structured_eval}\n')
+
   return verbose_eval, structured_eval
 
 def summarize_abstract(session_id : str, query_number : int, \
   client : genai.Client, prompt: str, abstract : str, \
-  model_str : str ="gemini-1.5-flash") -> str:
+  model_str : str ="gemini-1.5-flash", verbose : int = 0) -> str:
   """summarize the abstract using the given client and prompt.
   the method also logs to the agent log file.
   Args:
@@ -136,8 +142,11 @@ def summarize_abstract(session_id : str, query_number : int, \
   )
   log_agent(session_id=session_id, msg=f'q={query_number}| n_input: {num_input_tokens}', logger=logger)
   log_agent(session_id=session_id, msg=f'q={query_number}| n_output: {response.usage_metadata}', logger=logger)
-  #print(f"num input tokens = {num_input_tokens}\n")
-  #print(f"num output tokens = {response.usage_metadata}\n")
+
+  if verbose > 0:
+    print(f'LLM summary:\n{response.text}\n')
+    print(f"num input tokens = {num_input_tokens}\n")
+    print(f"num output tokens = {response.usage_metadata}\n")
   # num input tokens = total_tokens=231 cached_content_token_count=None
   # num output tokens = cached_content_token_count=None candidates_token_count=127 prompt_token_count=227 total_token_count=354
 

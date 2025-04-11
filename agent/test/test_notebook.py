@@ -22,43 +22,49 @@ class TestTrials(unittest.TestCase):
 
     key = AI_Studio_API_KEY.get_AI_Studio_API_KEY()
 
-    for q_id in range(0, 1):
+    abstract_str = self.get_test_abstract_01()
+
+    # the unit tests by default run sequentially, so should be fine to assert number of lines in log file
+    # before and after a logged function
+    n_lines_agent = self._count_agent_log_lines()
+    if n_lines_agent is None:
+      n_lines_agent = 0
+    n_lines_agent_expected = 3 * len(models)
+
+    # evaulate the summary
+    n_lines_eval = self._count_eval_log_lines()
+    if n_lines_eval is None:
+      n_lines_eval = 0
+    n_lines_eval_expected = 1 * len(models)
+
+    verbosity = 1
+
+    for q_id in range(len(models)):
 
       client = notebook_genai.get_genAI_client(key)
-
-      # the unit tests by default run sequentially, so should be fine to assert number of lines in log file
-      # before and after a logged function
-      n_lines_agent = self._count_agent_log_lines()
-      if n_lines_agent is None:
-        n_lines_agent = 0
 
       model_str = models[q_id]
 
       summary = notebook_genai.summarize_abstract(s_id, q_id, client, \
-        prompt = prompt.get_prompt(), abstract=self.get_test_abstract_01(),\
-        model_str=model_str)
+        prompt = prompt.get_prompt(), abstract=abstract_str,\
+        model_str=model_str,  verbose=verbosity)
 
       self.assertIsNotNone(summary)
 
-      n_lines_agent_2 = self._count_agent_log_lines()
-      # agent logs should have 3 more lines
-      self.assertEqual(n_lines_agent_2 - n_lines_agent, 3)
-
-      #evaulate the summary
-      n_lines_eval = self._count_eval_log_lines()
-      if n_lines_eval is None:
-        n_lines_eval = 0
-
       text_eval, struct_eval = notebook_genai.evaluate_the_summary(session_id = s_id, query_number = q_id, \
-        client = client, prompt = prompt.get_prompt(), summary = summary, model_str=eval_model_str)
+        client = client, prompt = [prompt.get_prompt(), abstract_str], \
+        summary = summary, model_str=eval_model_str, verbose=verbosity)
 
-      n_lines_eval_2 = self._count_eval_log_lines()
-      n_lines_agent_3 = self._count_agent_log_lines()
-      self.assertEqual(n_lines_eval_2 - n_lines_eval, 1)
-      self.assertEqual(n_lines_agent_3 - n_lines_agent_2, 1)
+      self.assertIsNotNone(text_eval)
+      self.assertIsNotNone(summary)
+      if verbosity > 0:
+        print(f'LLM={model_str}, eval={struct_eval}\n')
 
-      print(f'{model_str}, eval={struct_eval}\n')
-      print(struct_eval)
+    n_lines_agent_2 = self._count_agent_log_lines()
+    n_lines_eval_2 = self._count_eval_log_lines()
+    # agent logs should have 3 more lines, but there is buffered
+    self.assertEqual(n_lines_agent_expected, n_lines_agent_2 - n_lines_agent)
+    self.assertEqual(n_lines_eval_expected, n_lines_eval_2 - n_lines_eval)
 
   def _read_file_last_line(self, flpath: str):
     try:
