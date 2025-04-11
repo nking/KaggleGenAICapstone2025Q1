@@ -1,6 +1,7 @@
 import unittest
 import runpy
 import os
+import random
 
 class TestSessionId(unittest.TestCase):
   def test_script_execution(self):
@@ -15,21 +16,33 @@ class TestSessionId(unittest.TestCase):
     self.assertTrue(isinstance(session_id, int))
 
     msg = "abstract=asdfghj"
-    result['log_step'](agent_logger, session_id, msg)
-
+    result['log_agent'](session_id, msg)
     content = self._read_file_last_line(result['agent_flpath'])
     self.assertIsNotNone(content)
     self.assertTrue(content.endswith(msg))
 
-    msg = str(os.urandom(128))
-    result['store_llm_eval'](session_id, msg)
+    logger = result['get_agent_logger']()
+    msg = "abstract=lduyw"
+    result['log_agent'](session_id, msg, logger)
+    content = self._read_file_last_line(result['agent_flpath'])
+    self.assertIsNotNone(content)
+    self.assertTrue(content.endswith(msg))
+
+    msg = str(random.randint(0, 100))
+    result['log_llm_eval'](session_id, msg)
     content = self._read_file_last_line(result['llm_eval_flpath'])
     self.assertIsNotNone(content)
     self.assertTrue(content.endswith(msg))
 
-    msg = str(os.urandom(128))
-    result['store_user_feedback'](session_id, msg)
+    msg = str(random.randint(0, 100))
+    result['log_user_feedback'](session_id, msg)
     content = self._read_file_last_line(result['feedback_flpath'])
+    self.assertIsNotNone(content)
+    self.assertTrue(content.endswith(msg))
+
+    msg = str(random.randint(0, 100))
+    result['log_error'](session_id, msg)
+    content = self._read_file_last_line(result['error_flpath'])
     self.assertIsNotNone(content)
     self.assertTrue(content.endswith(msg))
 

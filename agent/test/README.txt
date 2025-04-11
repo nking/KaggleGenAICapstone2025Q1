@@ -18,7 +18,7 @@ test
 problems can occur when the run configs in pycharm have a working directory other
 than the base project directory.  this can happen if the first time a test is run is from
 the right click context menu on the test file name.  if that is the case, open the
-configuration with Run -> Edit Configurations then select the test file rom the left
+configuration with Run -> Edit Configurations then select the test file from the left
 menu then edit the working directory to be the base directory.
 
 Note that the command line invocation of a single unit test is invoked from

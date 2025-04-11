@@ -87,10 +87,11 @@ Gemini-1.5-flash
         $0.60, prompts > 128k tokens
         Note that Gemini 1.5 Flash-8B are half that cost for smaller model
 
-Gemma 3 1B (text only)  not hosted, so download to local env.or deploy to a host
+Gemma gemma-3-27b-it (text only)  
     Strengths:
         Lightweight, free 
     Weaknesses:
+        context input window constraint of 128 k
         No grounding, possibly lower quality results than gemini-1.5-flash for 
         this project's content
         No ability to find-tune

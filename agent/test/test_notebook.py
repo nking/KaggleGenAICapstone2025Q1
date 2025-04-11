@@ -1,0 +1,111 @@
+import unittest
+from urllib.parse import urlparse
+import os
+import notebook_genai
+import session_id
+import prompt
+import setup_logging
+from . import HasInternetConnection
+from . import AI_Studio_API_KEY
+
+class TestTrials(unittest.TestCase):
+  def test_summarization(self):
+    if not HasInternetConnection.have_internet():
+      return
+
+    s_id = session_id.get_session_id()
+
+    eval_model_str = 'gemini-1.5-flash'
+
+    # the gemma model has a  128K context window
+    models=['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemma-3-27b-it']
+
+    key = AI_Studio_API_KEY.get_AI_Studio_API_KEY()
+
+    for q_id in range(0, 1):
+
+      client = notebook_genai.get_genAI_client(key)
+
+      # the unit tests by default run sequentially, so should be fine to assert number of lines in log file
+      # before and after a logged function
+      n_lines_agent = self._count_agent_log_lines()
+      if n_lines_agent is None:
+        n_lines_agent = 0
+
+      model_str = models[q_id]
+
+      summary = notebook_genai.summarize_abstract(s_id, q_id, client, \
+        prompt = prompt.get_prompt(), abstract=self.get_test_abstract_01(),\
+        model_str=model_str)
+
+      self.assertIsNotNone(summary)
+
+      n_lines_agent_2 = self._count_agent_log_lines()
+      # agent logs should have 3 more lines
+      self.assertEqual(n_lines_agent_2 - n_lines_agent, 3)
+
+      #evaulate the summary
+      n_lines_eval = self._count_eval_log_lines()
+      if n_lines_eval is None:
+        n_lines_eval = 0
+
+      text_eval, struct_eval = notebook_genai.evaluate_the_summary(session_id = s_id, query_number = q_id, \
+        client = client, prompt = prompt.get_prompt(), summary = summary, model_str=eval_model_str)
+
+      n_lines_eval_2 = self._count_eval_log_lines()
+      n_lines_agent_3 = self._count_agent_log_lines()
+      self.assertEqual(n_lines_eval_2 - n_lines_eval, 1)
+      self.assertEqual(n_lines_agent_3 - n_lines_agent_2, 1)
+
+      print(f'{model_str}, eval={struct_eval}\n')
+      print(struct_eval)
+
+  def _read_file_last_line(self, flpath: str):
+    try:
+      with open(flpath, 'r') as infile:
+        return infile.readlines()[-1].strip()
+    except FileNotFoundError:
+      print(f"{flpath} not found\n")
+    except ValueError:
+      print(f"Error: Invalid content in {flpath}.\n")
+
+  def _count_agent_log_lines(self):
+    flpath = setup_logging.agent_flpath
+    try:
+      with open(flpath, 'r') as infile:
+        return len(infile.readlines())
+    except FileNotFoundError:
+      print(f"{flpath} not found\n")
+    except ValueError:
+      print(f"Error: Invalid content in {flpath}.\n")
+
+  def _count_eval_log_lines(self):
+    flpath = setup_logging.llm_eval_flpath
+    try:
+      with open(flpath, 'r') as infile:
+        return len(infile.readlines())
+    except FileNotFoundError:
+      print(f"{flpath} not found\n")
+    except ValueError:
+      print(f"Error: Invalid content in {flpath}.\n")
+
+  def get_test_abstract_01(self):
+    return """\
+Men taking antioxidant vitamin E supplements 
+have increased prostate cancer (PC) risk. However, whether 
+pro-oxidants protect from PC remained unclear. In this work, 
+we show that a pro-oxidant vitamin K precursor 
+[menadione sodium bisulfite (MSB)] suppresses PC progression in mice, 
+killing cells through an oxidative cell death: MSB antagonizes 
+the essential class III phosphatidylinositol (PI) 3-kinase VPS34-the 
+regulator of endosome identity and sorting-through oxidation of 
+key cysteines, pointing to a redox checkpoint in sorting. 
+Testing MSB in a myotubular myopathy model that is driven by 
+loss of MTM1-the phosphatase antagonist of VPS34-we show that 
+dietary MSB improved muscle histology and function and extended 
+life span. These findings enhance our understanding of pro-oxidant 
+selectivity and show how definition of the pathways they impinge 
+on can give rise to unexpected therapeutic opportunities."""
+
+if __name__ == '__main__':
+  unittest.main()
