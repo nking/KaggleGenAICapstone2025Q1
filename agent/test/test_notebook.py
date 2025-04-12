@@ -15,7 +15,7 @@ class TestTrials(unittest.TestCase):
 
     s_id = session_id.get_session_id()
 
-    eval_model_str = 'gemini-1.5-flash'
+    eval_model_name = 'gemini-1.5-flash'
 
     # the gemma model has a  128K context window
     models=['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemma-3-27b-it']
@@ -43,22 +43,22 @@ class TestTrials(unittest.TestCase):
 
       client = notebook_genai.get_genAI_client(key)
 
-      model_str = models[q_id]
+      model_name = models[q_id]
 
       summary = notebook_genai.summarize_abstract(s_id, q_id, client, \
         prompt = prompt.get_prompt(), abstract=abstract_str,\
-        model_str=model_str,  verbose=verbosity)
+        model_name= model_name,  verbose=verbosity)
 
       self.assertIsNotNone(summary)
 
       text_eval, struct_eval = notebook_genai.evaluate_the_summary(session_id = s_id, query_number = q_id, \
         client = client, prompt = [prompt.get_prompt(), abstract_str], \
-        summary = summary, model_str=eval_model_str, verbose=verbosity)
+        summary = summary, model_name= eval_model_name, verbose=verbosity)
 
       self.assertIsNotNone(text_eval)
       self.assertIsNotNone(summary)
       if verbosity > 0:
-        print(f'LLM={model_str}, eval={struct_eval}\n')
+        print(f'LLM={model_name}, eval={struct_eval}\n')
 
     n_lines_agent_2 = self._count_agent_log_lines()
     n_lines_eval_2 = self._count_eval_log_lines()

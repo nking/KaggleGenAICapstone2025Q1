@@ -8,7 +8,7 @@ from . import HasInternetConnection
 import article
 import HttpsRequester
 
-class TestTrials(unittest.TestCase):
+class TestArticle(unittest.TestCase):
   def test_create_url(self):
     pmid = 21976132
     API_KEY = NIH_API_KEY.get_NIH_API_KEY()

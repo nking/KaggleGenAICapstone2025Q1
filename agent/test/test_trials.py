@@ -41,6 +41,20 @@ class TestTrials(unittest.TestCase):
       content = req.send_req(url_str)
       results_list, nextPageToken = trials.parse_and_filter(content)
       self.assertIsNotNone(nextPageToken)
+      self.assertIsNotNone(results_list)
+      for result in results_list:
+        self.assertTrue(result['briefTitle'])
+        self.assertTrue(result['officialTitle'])
+        self.assertTrue(result['organization'])
+        self.assertTrue(result['citations'])
+        self.assertTrue(result['citations'][0]['pmid'])
+        self.assertTrue(result['citations'][0]['citation'])
+
+  def test_get_clinical_trials_for_disease(self):
+    if HasInternetConnection.have_internet():
+      disease = "lung cancer"
+      results_list = trials.get_clinical_trials_for_disease(disease)
+      self.assertIsNotNone(results_list)
       for result in results_list:
         self.assertTrue(result['briefTitle'])
         self.assertTrue(result['officialTitle'])
