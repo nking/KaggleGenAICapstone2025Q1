@@ -57,6 +57,23 @@ course.
       Grounding
       Retrieval augmented generation (RAG)
       MLOps (with GenAI)
+  This is the full list:
+      Structured output/JSON mode/controlled generation
+      Few-shot prompting
+      Document understanding
+      Image understanding
+      Video understanding
+      Audio understanding
+      Function Calling
+      Agents
+      Long context window
+      Context caching
+      Gen AI evaluation
+      Grounding
+      Embeddings
+      Retrieval augmented generation (RAG)
+      Vector search/vector store/vector database
+      MLOps (with GenAI)
 
 Ideally, the code should solve a real world problem.
 

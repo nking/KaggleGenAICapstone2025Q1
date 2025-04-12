@@ -26,6 +26,18 @@ class SummaryRating(enum.Enum):
   BAD = '2'
   VERY_BAD = '1'
 
+class UserFeedBack(enum.Enum):
+  VERY_GOOD = '5'
+  GOOD = '4'
+  OK = '3'
+  BAD = '2'
+  VERY_BAD = '1'
+
+class ReasonForBad(enum.Enum):
+  TRIALS_NOT_RELEVANT = '3'
+  BAD_RESULTS_SUMMARY = '2'
+  ERROR = '1'
+
 def init_generate_content_retry():
   is_retriable = lambda e: (isinstance(e, genai.errors.APIError) and e.code in {429, 503})
   # free tier for gemini flash 2: RPM=15, TPM=1E6, RPD=1500
@@ -39,7 +51,7 @@ def get_genAI_client(AI_Studio_API_Key : str) -> genai.Client:
   return client
 
 def evaluate_the_summary(session_id : str, query_number : int, \
-  client : genai.Client,  prompt, summary, model_str : str = 'gemini-1.5-flash',\
+  client : genai.Client,  prompt, summary, model_name : str = 'gemini-1.5-flash',\
   verbose : int = 0) :
   '''
   Evaluate the generated summary against the prompt used
@@ -51,7 +63,7 @@ def evaluate_the_summary(session_id : str, query_number : int, \
     client: an instance of the genAI client
     prompt: a text prompt to give to the LLM, e.g. "summarize this text"
     summary: the LLM output summary of the abstract
-    model_str: name of the LLM to use for evaluation
+    model_name: name of the LLM to use for evaluation
   Usage:
     text_eval, struct_eval = evaluate_the_summary(client, prompt=[request, document_file], summary=summary)
     Markdown(text_eval)
@@ -65,7 +77,7 @@ def evaluate_the_summary(session_id : str, query_number : int, \
   SUMMARY_PROMPT = get_eval_instruction()
 
   #chat = client.chats.create(model=')
-  chat = client.chats.create(model=model_str)
+  chat = client.chats.create(model=model_name)
 
   # Generate the full text response.
   response = chat.send_message(
@@ -98,7 +110,7 @@ def evaluate_the_summary(session_id : str, query_number : int, \
 
 def summarize_abstract(session_id : str, query_number : int, \
   client : genai.Client, prompt: str, abstract : str, \
-  model_str : str ="gemini-1.5-flash", verbose : int = 0) -> str:
+  model_name : str ="gemini-1.5-flash", verbose : int = 0) -> str:
   """summarize the abstract using the given client and prompt.
   the method also logs to the agent log file.
   Args:
@@ -107,7 +119,7 @@ def summarize_abstract(session_id : str, query_number : int, \
     client: an instance of the genAI client
     prompt: a text prompt to give to the LLM, e.g. "summarize this text"
     abstract: the abstract to summarize
-    model_str: name of the LLM to use
+    model_name: name of the LLM to use
   Returns:
     the LLM's summarization of the abstract
   """
@@ -121,7 +133,7 @@ def summarize_abstract(session_id : str, query_number : int, \
   # Set the temperature low to stabilise the output.
   config = types.GenerateContentConfig(temperature=0.0)
   response = client.models.generate_content(
-      model=model_str,
+      model=model_name,
       config=config,
       contents=[prompt, abstract],
   )
@@ -138,7 +150,7 @@ def summarize_abstract(session_id : str, query_number : int, \
   log_agent(session_id=session_id, msg=f'q={query_number}|summary time: {elapsed_ns}', logger=logger)
 
   num_input_tokens = client.models.count_tokens(
-    model=model_str, contents=[prompt, abstract]
+    model=model_name, contents=[prompt, abstract]
   )
   log_agent(session_id=session_id, msg=f'q={query_number}| n_input: {num_input_tokens}', logger=logger)
   log_agent(session_id=session_id, msg=f'q={query_number}| n_output: {response.usage_metadata}', logger=logger)

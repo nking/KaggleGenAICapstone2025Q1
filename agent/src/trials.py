@@ -1,5 +1,6 @@
 from urllib.parse import quote
 import json
+import HttpsRequester
 
 def get_trial_request_url(disease: str) -> str:
   '''
@@ -58,3 +59,10 @@ def parse_and_filter(json_resp : str):
     raise e
   nextPageToken = json_data["nextPageToken"] if "nextPageToken" in json_data else None
   return out, nextPageToken
+
+def get_clinical_trials_for_disease(disease: str) -> list:
+  url_str = get_trial_request_url(disease)
+  req = HttpsRequester.HttpsRequester()
+  content = req.send_req(url_str)
+  results_list, nextPageToken = parse_and_filter(content)
+  return results_list

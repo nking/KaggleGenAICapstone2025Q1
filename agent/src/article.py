@@ -6,6 +6,7 @@ from urllib.parse import quote
 
 #!pip install -q lxml
 from lxml import etree
+import HttpsRequester
 
 def get_pubmed_request_url(pmid: str, NIH_API_KEY : str) -> str:
   '''
@@ -55,4 +56,13 @@ def parse_and_filter(xml_resp : str) -> str:
     print(f"Error parsing xml: {e}")
     raise e
   return string_io.getvalue()
+
+#TODO: consider how to replace w/ kaggle notebook secrets passing of api key
+def get_article_abstract_from_pubmed(pmid : str, NIH_API_KEY: str) -> str:
+  url_str =get_pubmed_request_url(pmid, NIH_API_KEY)
+  req = HttpsRequester.HttpsRequester()
+  content = req.send_req(url_str)
+  abstract = parse_and_filter(content)
+  return abstract
+
 
