@@ -1,6 +1,7 @@
 from urllib.parse import quote
 import json
 import HttpsRequester
+import io
 
 def get_trial_request_url(disease: str) -> str:
   '''
@@ -59,6 +60,20 @@ def parse_and_filter(json_resp : str):
     raise e
   nextPageToken = json_data["nextPageToken"] if "nextPageToken" in json_data else None
   return out, nextPageToken
+
+def format_citations(citations: list) -> str:
+  string_io = io.StringIO()
+  for i, cit in enumerate(citations):
+    string_io.write(f"i) {cit['citation']}\n")
+  return string_io.getvalue()
+
+def format_trials(trials: list) -> str:
+  string_io = io.StringIO()
+  for i, cit in enumerate(trials):
+    string_io.write(f"i) full title: {cit['fullTitle']}\n")
+    string_io.write(f"   brief title: {cit['briefTitle']}\n")
+    string_io.write(f"   organization: {cit['organization']}\n")
+  return string_io.getvalue()
 
 def get_clinical_trials_for_disease(disease: str) -> list:
   url_str = get_trial_request_url(disease)

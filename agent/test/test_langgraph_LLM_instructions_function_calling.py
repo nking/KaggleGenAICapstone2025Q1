@@ -18,6 +18,9 @@ from random import randint
 from langchain_core.messages.tool import ToolMessage
 from langchain_core.tools.render import render_text_description
 import os
+import re
+from contextlib import redirect_stdout
+import io
 
 #The code is adpated from
 #adapted from https://www.kaggle.com/code/markishere/day-3-building-an-agent-with-langgraph
@@ -70,7 +73,6 @@ def add_to_order(drink: str, modifiers: Iterable[str]) -> str:
     The updated order in progress.
   '''
   print(f'add_to_order.  type mod={type(modifiers)}\n')
-  tt = 2 #TODO: note the type so can make function declarations for gemma
 
 @tool
 def confirm_order() -> str:
@@ -140,18 +142,14 @@ The ordering system schema is defined as:
 {rendered_tools}
 """
 
-#langchain_google_genai.chat_models.ChatGoogleGenerativeAIError:
-# Invalid argument provided to Gemini: 400 Function calling is not enabled for models/gemma-3-27b-it
-# so I added the schema for the functions for tools to the prompts.
-# gemini did okay with it inspite of my alterations of the instructions.
-# gemma howere has this error now: Developer instruction is not enabled for models/gemma-3-27b-it
-models = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemma-3-27b-it']
-model_name = models[0]
+#for gemma, one has to include the function, that is tool) declarations as schema in the prompts.
+models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemma-3-27b-it']
+#for testing, I have this set to the gemma model
+model_name = models[2]
 
-
-BARISTABOT_SYSINT = ("system", INSTR)
+#BARISTABOT_SYSINT = ("system", INSTR) <-- Gemma does not work with "system" in the prompts
+BARISTABOT_SYSINT = (INSTR)
 WELCOME_MSG = f"Welcome to the BaristaBot cafe. Type `q` to quit.\nHere is our menu:\n {MENU}\nHow can I help you?"
-
 
 class MyTestCase(unittest.TestCase):
   def test_something(self):
@@ -183,17 +181,7 @@ class MyTestCase(unittest.TestCase):
       print("Model (chatbot_with_tools)")
       defaults = {"order": [], "finished": False}
       if state["messages"]:
-        if model_name.startswith("gemma"):
-          new_output = "handle this programmatically"
-          #EDITING HERE
-          # analyze: state["messages"][-1]
-          # type='human'
-          # content = '...' <-- an item to match to menu
-          # programmatically determine if it's q, or confirmation, or an item on menu:
-          # if menu item then invoke confirm, if is a confirmation look at recent history to determine whether
-          # we add an order next or remove an order or place order
-        else:
-          new_output = llm.invoke([BARISTABOT_SYSINT] + state["messages"])
+        new_output = llm.invoke([BARISTABOT_SYSINT] + state["messages"])
       else:
         new_output = AIMessage(content=WELCOME_MSG)
       # Set up some defaults if not already set, then pass through the provided state,
