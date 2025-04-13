@@ -35,6 +35,7 @@ import io
 import debug_functions
 from trials import format_citations, get_clinical_trials_for_disease, format_trials
 from prompt import get_prompt
+from prompt_disease_name import get_disease_name_prompt
 from article import get_article_abstract_from_pubmed
 from notebook_genai import get_genAI_client, summarize_abstract, evaluate_the_summary
 from session_id import get_session_id
@@ -112,10 +113,12 @@ class MyTestCase(unittest.TestCase):
 
     s_id = get_session_id()
 
-    if _debug:
-      client = None
-    else:
-      client = get_genAI_client(AI_STUDIO_KEY)
+    client = get_genAI_client(AI_STUDIO_KEY)
+
+    disease_name_checker = ChatGoogleGenerativeAI(
+      model=model_name, temperature=0, max_tokens=None, timeout=None, max_retries=2,
+      # other params...
+    )
 
     #if decide to use a chatbot w/ an LLM that has instruction and tool ability, you can modify the below code to
     # give the chatbot more of the input processing and flow control.  the chatbot can be the google langraph genai chatbot
@@ -141,13 +144,31 @@ class MyTestCase(unittest.TestCase):
     def user_input_disease(state: GraphState) -> GraphState:
       #print(f"Model (user_input_disease) debug\n")
       reset_graph_state(state)
-      user_input = input("Please enter a disease to search for (q to quit at any time).\n:")
-      if user_input in {"q", "quit", "exit", "done", "goodbye"}:
-        return {"finished": True}
+      state["q_id"] = 0 if "q_id" not in state else state["q_id"] + 1
+
+      #ask the user for the disease name then ask the llm if it recognizes the disease name
+      max_iter = 10
+      num_iter = 0
+      while num_iter < max_iter:
+        user_input = input("Please enter a disease to search for (q to quit at any time).\n:")
+        user_input = user_input.strip()
+        if user_input in {"q", "quit", "exit", "done", "goodbye"}:
+          return {"finished": True}
+        _prompt = get_disease_name_prompt(user_input)
+        #ask the llm if it recognizes the name:
+        response = disease_name_checker.invoke(_prompt)
+        if response.content.lower().startswith("no"):
+          user_input_2 = input(f"I don't recognize {user_input} as a disease name but clinicaltrials.gov might.\nType 0 to proceed or Type 1 to retype the disease name.\n:")
+          user_input_2 = user_input_2.strip()
+          if user_input_2 == "0":
+            break
+        else:
+          break
+        num_iter += 1
       #TODO: consider asking the LLM if this looks like a disease name, or let chatbot logic handle more of the code
       #LLM can suggest corrections if there are typos
       state["disease"] = user_input
-      state["q_id"] = 0 if "q_id" not in state else state["q_id"] + 1
+
       state["next_node"] = "fetch_trials"
       #return the entire state because we've reset fields and are modified others
       return state
