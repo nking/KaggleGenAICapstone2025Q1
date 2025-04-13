@@ -3,7 +3,7 @@
 #   latest version of the langraph libs might be later, but might not be compatible
 import unittest
 from langchain_core.prompts import ChatPromptTemplate
-from typing import Annotated, Literal, Union
+from typing import Annotated, Literal, Union, Callable
 from typing_extensions import TypedDict
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, START, END
@@ -21,7 +21,6 @@ import os
 import re
 from contextlib import redirect_stdout
 import io
-import pprint
 
 #The code is adpated from
 #adapted from https://www.kaggle.com/code/markishere/day-3-building-an-agent-with-langgraph
@@ -79,17 +78,18 @@ verbosity = 1
 models = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemma-3-27b-it']
 model_name = models[2]
 
-WELCOME_MSG = f"Please enter a disease that you would like to see completed trial results for:"
+WELCOME_MSG = "This librarian searches clinical trials for completed, published results and summarizes the results for you."
 
 #TODO: put in testable script and write unit tests for it
-def user_list_index_input(options_name: str, options_list: list, list_format_function) -> int:
-  if options_name is None or options_list is None or len(options_list) == 0 or list_format_function is None:
-    return END
+def user_list_index_input(options_name: str, options_list: list, format_func:Callable) -> int:
+  if options_name is None or options_list is None or len(options_list) == 0 or format_func is None:
+    return -1
   max_iter = 10
   num_iter = 0
   while True:
-    print(f'{list_format_function(options_list)}\n')
-    user_input = input(f'Please choose a {options_name} number from 0 to {len(options_list)} or q to quit\n: ')
+    #pprint(format_func(options_list))
+    print(format_func(options_list))
+    user_input = input(f'Please choose a {options_name} number from 0 to {len(options_list)} or q to quit\n:')
     if user_input in {"q", "quit", "exit", "done", "goodbye"}:
       return -1
     if num_iter == max_iter:
@@ -139,12 +139,13 @@ class MyTestCase(unittest.TestCase):
     #TODO: remove message field
 
     def user_input_disease(state: GraphState) -> GraphState:
-      print(f"Model (user_input_disease) debug\n")
+      #print(f"Model (user_input_disease) debug\n")
       reset_graph_state(state)
-      user_input = input("Please enter a disease to search for (q to quit at any time)\n: ")
+      user_input = input("Please enter a disease to search for (q to quit at any time).\n:")
       if user_input in {"q", "quit", "exit", "done", "goodbye"}:
         return {"finished": True}
       #TODO: consider asking the LLM if this looks like a disease name, or let chatbot logic handle more of the code
+      #LLM can suggest corrections if there are typos
       state["disease"] = user_input
       state["q_id"] = 0 if "q_id" not in state else state["q_id"] + 1
       state["next_node"] = "fetch_trials"
@@ -152,7 +153,7 @@ class MyTestCase(unittest.TestCase):
       return state
 
     def fetch_trials(state: GraphState) -> GraphState:
-      print(f"Model (fetch_trials_conditional) debug\n")
+      #print(f"Model (fetch_trials_conditional) debug\n")
       if "disease" not in state:
         print("missing disease name")
         return {"next_node": "user_input_disease"}
@@ -167,21 +168,21 @@ class MyTestCase(unittest.TestCase):
       return {"trials": results, "next_node": "user_choose_trial_number"}
 
     def user_choose_trial_number(state: GraphState) -> GraphState:
-      print(f"Model (user_choose_trial_number) debug\n")
+      #print(f"Model (user_choose_trial_number) debug\n")
       if "trials" not in state or len(state["trials"]) == 0:
         print("System Error.  no trials found.  please start again.")
         return {"next_node": "user_input_disease"}
-      idx = user_list_index_input(options_name="trial", options_list=state["trials"], list_format_function=format_trials)
+      idx = user_list_index_input(options_name="trial", options_list=state["trials"], format_func=format_trials)
       if idx is None or idx == -1:
         return {"finished": True}
       return {"trial_number": idx, "next_node": "user_choose_citation_number"}
 
     def user_choose_citation_number(state: GraphState) -> GraphState:
-      print(f"Model (user_choose_citation_number) debug\n")
+      #print(f"Model (user_choose_citation_number) debug\n")
       if "trials" not in state or len(state["trials"]) == 0:
         print("System Error.  no trials found.  please start again.")
         return {"next_node": "user_input_disease"}
-      if "trial_number" not in state or len(state["trial_number"]) == 0:
+      if "trial_number" not in state:
         print("System Error.  trial_number not found.  ")
         return {"next_node": "user_choose_trial_number"}
       #this is prevented by parsing stage, but check in any case:
@@ -189,13 +190,13 @@ class MyTestCase(unittest.TestCase):
         print("System Error.  citations not found.  please choose another trial.")
         return {"next_node": "user_choose_trial_number"}
       citations = state["trials"][state["trial_number"]]["citations"]
-      idx = user_list_index_input(options_name="citation", options_list=citations, list_format_function=format_citations)
+      idx = user_list_index_input(options_name="citation", options_list=citations, format_func=format_citations)
       if idx is None or idx == -1:
         return {"finished": True}
       return {"pmid" : citations[idx]["pmid"], "next_node" : "fetch_abstract"}
 
     def fetch_abstract(state: GraphState) -> GraphState:
-      print(f"Model (fetch_abstract): debug\n")
+      #print(f"Model (fetch_abstract): debug\n")
       if "pmid" not in state:
         print("Error.  article id not found.  please choose a citation.")
         return {"next_node" : "user_choose_citation_number"}
@@ -210,7 +211,7 @@ class MyTestCase(unittest.TestCase):
       return {"abstract": results, "next_node": "llm_summarization"}
 
     def llm_summarization(state: GraphState) -> GraphState:
-      print(f"Model (llm_summarization) debug\n")
+      #print(f"Model (llm_summarization) debug\n")
       if "abstract" not in state or len(state["abstract"]) == 0:
         print("System Error.  no article found.  please choose another citation.")
         return {"next_node" : "user_choose_citation_number"}
@@ -224,7 +225,9 @@ class MyTestCase(unittest.TestCase):
           prompt = [get_prompt(), state["abstract"]], \
           summary = summary, model_name= model_name, verbose=verbosity)
         #the evaluation results are logged in the method
-      pprint.pprint(f"summary:{summary}")
+      print("Here is a summary of the abstract of the chosen citation.\n")
+      pprint(summary)
+      print("\n")
       return {"next_node": "user_input_disease"}
 
     def check_end_conditional(state: GraphState) -> GraphState:
@@ -252,9 +255,7 @@ class MyTestCase(unittest.TestCase):
 
     print(WELCOME_MSG)
     state = graph.invoke({"messages": []}, {"recursion_limit": 100})
-    pprint(state)
-
-    tt = 2
+    #pprint(state)
 
 if __name__ == '__main__':
   unittest.main()

@@ -64,13 +64,13 @@ def parse_and_filter(json_resp : str):
 def format_citations(citations: list) -> str:
   string_io = io.StringIO()
   for i, cit in enumerate(citations):
-    string_io.write(f"i) {cit['citation']}\n")
+    string_io.write(f"{i}  {cit['citation']}\n")
   return string_io.getvalue()
 
 def format_trials(trials: list) -> str:
   string_io = io.StringIO()
   for i, cit in enumerate(trials):
-    string_io.write(f"i) full title: {cit['fullTitle']}\n")
+    string_io.write(f"{i}  full title: {cit['officialTitle']}\n")
     string_io.write(f"   brief title: {cit['briefTitle']}\n")
     string_io.write(f"   organization: {cit['organization']}\n")
   return string_io.getvalue()

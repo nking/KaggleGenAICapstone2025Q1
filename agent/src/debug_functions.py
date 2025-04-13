@@ -17,7 +17,7 @@ def get_article_abstract_from_pubmed(pmid : str) -> str:
   abstract = article.parse_and_filter(content)
   return abstract
 
-def _read_pubmed_response(self):
+def _read_pubmed_response():
     working_dir = os.environ.get('PWD')
     if working_dir.endswith("test"):
       working_dir += "/../../"
