@@ -40,7 +40,7 @@ class TestSessionId(unittest.TestCase):
     self.assertIsNotNone(content)
     self.assertTrue(content.endswith(msg))
 
-    msg = f'q={str(random.randint(0, 100))}|eval=SummaryRating.VERY_GOOD'
+    msg = f'q={str(random.randint(0, 100))}|err=exception cause'
     result['log_error'](session_id, msg)
     content = self._read_file_last_line(result['error_flpath'])
     self.assertIsNotNone(content)

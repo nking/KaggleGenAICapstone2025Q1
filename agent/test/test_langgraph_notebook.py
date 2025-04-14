@@ -41,6 +41,7 @@ from notebook_genai import get_genAI_client, summarize_abstract, evaluate_the_su
 from session_id import get_session_id
 from setup_logging import log_error
 from disease_choices_for_automated import select_disease_name_randomly
+from . import HasInternetConnection
 
 AI_STUDIO_KEY = mock_functions.get_AI_STUDIO_API_KEY()
 os.environ["GOOGLE_API_KEY"] = AI_STUDIO_KEY
@@ -91,6 +92,8 @@ WELCOME_MSG = get_welcome_msg()
 
 class MyTestCase(unittest.TestCase):
   def test_something(self):
+    if not HasInternetConnection.have_internet():
+      return
 
     s_id = get_session_id()
 

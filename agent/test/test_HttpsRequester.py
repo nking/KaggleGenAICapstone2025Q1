@@ -14,5 +14,12 @@ class TestTrials(unittest.TestCase):
       self.assertIsNotNone(res)
       #result.query
 
+  def test_mask_API_KEY(self):
+    req_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=30224019&retstart=0&retmax=1&retmode=xml&rettext=xml&api_key=02jPj"
+    req = HttpsRequester.HttpsRequester()
+    masked_url = req.mask_API_KEY(req_url)
+    expected = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=30224019&retstart=0&retmax=1&retmode=xml&rettext=xml&"
+    self.assertEqual(expected, masked_url)
+
 if __name__ == '__main__':
   unittest.main()

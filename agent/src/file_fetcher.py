@@ -1,4 +1,5 @@
 import os
+from setup_logging import log_error
 
 def get_base_dir():
   working_dir = os.environ.get('PWD')
@@ -17,11 +18,20 @@ def get_testresource(file_name:str):
   fl_path = f"{get_base_dir()}/agent/testresources/{file_name}"
   return read_file_contents(fl_path)
 
-def read_file_contents(flpath: str) :
+def read_file_contents(flpath: str):
+  '''
+  read file contents into a string
+
+  Args:
+    flpath: absolute file path
+
+  Returns:
+    returns file contents.  returns None if an exception occurred.
+  '''
   try:
     with open(flpath, 'r') as infile:
       return infile.read().strip()
-  except FileNotFoundError:
-    print(f"{flpath} not found\n")
-  except ValueError:
-    print(f"Error: Invalid content in {flpath}.\n")
+  except Exception as e:
+    print(f"Error reading {flpath}\n")
+    log_error("no_session_id", f"err={e}")
+    return None

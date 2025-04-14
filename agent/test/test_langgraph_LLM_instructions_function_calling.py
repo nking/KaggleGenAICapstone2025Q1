@@ -21,6 +21,7 @@ import os
 import re
 from contextlib import redirect_stdout
 import io
+from . import HasInternetConnection
 
 #The code is adpated from
 #adapted from https://www.kaggle.com/code/markishere/day-3-building-an-agent-with-langgraph
@@ -153,6 +154,8 @@ WELCOME_MSG = f"Welcome to the BaristaBot cafe. Type `q` to quit.\nHere is our m
 
 class MyTestCase(unittest.TestCase):
   def test_something(self):
+    if not HasInternetConnection.have_internet():
+      return
 
     # see args: https://python.langchain.com/api_reference/google_genai/llms/langchain_google_genai.llms.GoogleGenerativeAI.html#langchain_google_genai.llms.GoogleGenerativeAI
     llm = ChatGoogleGenerativeAI(
@@ -291,7 +294,7 @@ class MyTestCase(unittest.TestCase):
     Image(graph_with_order_tools.get_graph().draw_mermaid_png())
 
     state = graph_with_order_tools.invoke({"messages": []}, {"recursion_limit": 100})
-    pprint(state)
+    #pprint(state)
 
     tt = 2
 

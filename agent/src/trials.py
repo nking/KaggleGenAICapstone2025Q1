@@ -2,6 +2,7 @@ from urllib.parse import quote
 import json
 import HttpsRequester
 import io
+from setup_logging import log_error
 
 def get_trial_request_url(disease: str) -> str:
   '''
@@ -19,7 +20,7 @@ def get_trial_request_url(disease: str) -> str:
   disease_enc = quote(disease)
   return f'https://clinicaltrials.gov/api/v2/studies?format=json&query.cond={disease_enc}' \
     + '&query.term=prevention+or+treatment&filter.overallStatus=COMPLETED' \
-    + '&aggFilters=results%3Awith%2Cstatus%3Acom%2CstudyType%3Aint&fields=protocolSection&pageToken=NF0g5JuOlPUtyQ'
+    + '&aggFilters=results%3Awith%2Cstatus%3Acom%2CstudyType%3Aint&fields=protocolSection'
 
 def parse_and_filter(json_resp : str):
   '''
@@ -30,6 +31,7 @@ def parse_and_filter(json_resp : str):
     where results_list is a list of dictionaries with keys: briefTitle, officialTitle, citations, and nextPageToken
     where citations is a list of dictionaries with keys pmid, citation.  the citation is
     a text of the publication title, authors, and article publication
+    returns None for parse or load errors.
   '''
   out = []
   try:
@@ -55,14 +57,16 @@ def parse_and_filter(json_resp : str):
           'officialTitle' : pr['identificationModule']['officialTitle'], \
           'organization' : pr['identificationModule']['organization']['fullName'],\
           'citations' : citations})
-  except json.JSONDecodeError as e:
+  except Exception as e:
     print(f"Error decoding JSON: {e}")
-    raise e
+    log_error("no_session_id", f"err={e}")
+    return None, None
   nextPageToken = json_data["nextPageToken"] if "nextPageToken" in json_data else None
   return out, nextPageToken
 
 def format_citations(citations: list) -> str:
   string_io = io.StringIO()
+  #TODO: could improve this to place names, title, publication information each on separate lines.
   for i, cit in enumerate(citations):
     string_io.write(f"{i}  {cit['citation']}\n")
   return string_io.getvalue()

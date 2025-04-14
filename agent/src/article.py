@@ -7,6 +7,7 @@ from urllib.parse import quote
 #!pip install -q lxml
 from lxml import etree
 import HttpsRequester
+from setup_logging import log_error
 
 def get_pubmed_request_url(pmid: str, NIH_API_KEY : str) -> str:
   '''
@@ -33,7 +34,7 @@ def parse_and_filter(xml_resp : str) -> str:
     an XML response from PubMed
     the current schema version is https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_250101.dtd
   Returns:
-    the abstract as a string.  NOTE: the results may need to be filtered.
+    the abstract as a string.  returns None if an exception occurred.
   '''
   import io
   string_io = io.StringIO()
@@ -52,7 +53,8 @@ def parse_and_filter(xml_resp : str) -> str:
       string_io.write("\n")
   except Exception as e:
     print(f"Error parsing xml: {e}")
-    raise e
+    log_error("no_session_id", f"{e}")
+    return None
   return string_io.getvalue()
 
 #TODO: consider how to replace w/ kaggle notebook secrets passing of api key
