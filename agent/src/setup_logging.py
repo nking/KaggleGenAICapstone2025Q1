@@ -61,19 +61,33 @@ def get_error_logger():
 def get_timestamp():
   return time.time_ns()
 
+def log_to_cloud(msg: str, log_type: str):
+  '''
+  a stub for a cloud method
+  '''
+  pass
+
 def log_user_feedback(session_id: str, msg : str):
   logger = get_feedback_logger()
-  logger.info(f"{get_timestamp()}|{session_id}|{msg}")
+  stmt = f"{get_timestamp()}|{session_id}|{msg}"
+  logger.info(stmt)
+  log_to_cloud(stmt, 'feedback')
 
 def log_llm_eval(session_id: str, msg : str):
   logger = get_llm_eval_logger()
-  logger.info(f"{get_timestamp()}|{session_id}|{msg}")
+  stmt = f"{get_timestamp()}|{session_id}|{msg}"
+  logger.info(stmt)
+  log_to_cloud(stmt, 'eval')
 
 def log_error(session_id: str, msg : str):
   logger = get_error_logger()
-  logger.info(f"{get_timestamp()}|{session_id}|{msg}")
+  stmt = f"{get_timestamp()}|{session_id}|{msg}"
+  logger.info(stmt)
+  log_to_cloud(stmt, 'error')
 
 def log_agent(session_id: str, msg : str, logger: logging.Logger = None):
   if logger is None:
     logger = get_agent_logger()
-  logger.info(f"{get_timestamp()}|{session_id}|{msg}")
+  stmt = f"{get_timestamp()}|{session_id}|{msg}"
+  logger.info(stmt)
+  log_to_cloud(stmt, 'agent')
