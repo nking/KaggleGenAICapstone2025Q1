@@ -14,7 +14,7 @@ Groundedness: The response contains information included only in the context. Th
 Conciseness: The response summarizes the relevant details in the original text without a significant loss in key information without being too verbose or terse.
 Fluency: The response is well-organized and easy to read.
 
-## Rating Rubric
+## Rating Rubric format is rating: label. reason.
 5: (Very good). The summary follows instructions, is grounded, is concise, and fluent.
 4: (Good). The summary follows instructions, is grounded, concise, and fluent.
 3: (Ok). The summary mostly follows instructions, is grounded, but is not very concise and is not fluent.
@@ -23,7 +23,7 @@ Fluency: The response is well-organized and easy to read.
 
 ## Evaluation Steps
 STEP 1: Assess the response in aspects of instruction following, groundedness, conciseness, and verbosity according to the criteria.
-STEP 2: Score based on the rubric.
+STEP 2: Score based on the rubric printed as rating: label
 
 # User Inputs and AI-generated Response
 ## User Inputs

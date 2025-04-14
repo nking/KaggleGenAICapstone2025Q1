@@ -78,7 +78,8 @@ def evaluate_the_summary(session_id : str, query_number : int, \
   SUMMARY_PROMPT = get_eval_instruction()
 
   #chat = client.chats.create(model=')
-  eval_chat = client.chats.create(model=model_name)
+  eval_chat = client.chats.create(model=model_name,\
+    config = types.GenerateContentConfig(temperature=0.0))
 
   # Generate the full text response.
   response = eval_chat.send_message(
@@ -86,22 +87,25 @@ def evaluate_the_summary(session_id : str, query_number : int, \
   )
   verbose_eval = response.text
 
+  '''
   # Coerce into the desired structure.
-  if model_name.lower().startswith("gemma"):
-    structured_output_config = types.GenerateContentConfig(
-      response_schema=SummaryRating,
-    )
-  else:
-    structured_output_config = types.GenerateContentConfig(
-      response_mime_type="text/x.enum",
-      response_schema=SummaryRating,
-    )
+  response_mime_type = None #"text/x.enum"
+  #if model_name.lower().startswith("gemma"):
+  #  response_mime_type = None
+  structured_output_config = types.GenerateContentConfig(
+    response_mime_type=response_mime_type,
+    response_schema=SummaryRating,
+    temperature=0.0,
+  )
   response = eval_chat.send_message(
     message="Convert the final score.",
     config=structured_output_config,
   )
-  #TODO: edit here for Gemma no response_mime_type
-  structured_eval = response.parsed
+  #response.text
+  #structured_eval = response.parsed
+  '''
+  last_line = verbose_eval.split("\n")[-1].strip()
+  structured_eval = last_line[0:last_line.find(")")+1]
 
   stop_ns = time.time_ns()
   elapsed_ns = stop_ns - start_ns
