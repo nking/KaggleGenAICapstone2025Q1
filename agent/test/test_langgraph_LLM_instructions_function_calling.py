@@ -32,8 +32,8 @@ import io
 # and understand it in context of the recent history
 # (it's instructive to see how much the LLM is doing in the gemini invoke call instead)
 
-import debug_functions
-AI_STUDIO_KEY = debug_functions.get_AI_STUDIO_API_KEY()
+import mock_functions
+AI_STUDIO_KEY = mock_functions.get_AI_STUDIO_API_KEY()
 os.environ["GOOGLE_API_KEY"] = AI_STUDIO_KEY
 
 MENU = """MENU: 

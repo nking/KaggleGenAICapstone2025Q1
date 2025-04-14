@@ -7,6 +7,7 @@ from . import NIH_API_KEY
 from . import HasInternetConnection
 import article
 import HttpsRequester
+import file_fetcher
 
 class TestArticle(unittest.TestCase):
   def test_create_url(self):
@@ -39,17 +40,7 @@ class TestArticle(unittest.TestCase):
       self.assertIsNotNone(abstract)
 
   def _read_xml_response_1(self):
-    working_dir = os.environ.get('PWD')
-    if working_dir.endswith("test"):
-      working_dir += "/../../"
-    flpath = working_dir + "/agent/testresources/entrez_pubmed_response_20250409.xml"
-    try:
-      with open(flpath, 'r') as infile:
-        return infile.read().strip()
-    except FileNotFoundError:
-      print(f"{flpath} not found\n")
-    except ValueError:
-      print(f"Error: Invalid content in {flpath}.\n")
+    return file_fetcher.get_testresource(file_name="entrez_pubmed_response_20250409.xml")
 
 if __name__ == '__main__':
   unittest.main()

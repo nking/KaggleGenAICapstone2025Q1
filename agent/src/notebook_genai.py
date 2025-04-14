@@ -18,7 +18,7 @@ from IPython.display import Markdown, display
 genai.__version__
 
 import enum
-from eval_instruction import get_eval_instruction
+from prompts import get_eval_instruction
 
 class SummaryRating(enum.Enum):
   VERY_GOOD = '5'
@@ -78,23 +78,29 @@ def evaluate_the_summary(session_id : str, query_number : int, \
   SUMMARY_PROMPT = get_eval_instruction()
 
   #chat = client.chats.create(model=')
-  chat = client.chats.create(model=model_name)
+  eval_chat = client.chats.create(model=model_name)
 
   # Generate the full text response.
-  response = chat.send_message(
+  response = eval_chat.send_message(
     message=SUMMARY_PROMPT.format(prompt=prompt, response=summary)
   )
   verbose_eval = response.text
 
   # Coerce into the desired structure.
-  structured_output_config = types.GenerateContentConfig(
-    response_mime_type="text/x.enum",
-    response_schema=SummaryRating,
-  )
-  response = chat.send_message(
+  if model_name.lower().startswith("gemma"):
+    structured_output_config = types.GenerateContentConfig(
+      response_schema=SummaryRating,
+    )
+  else:
+    structured_output_config = types.GenerateContentConfig(
+      response_mime_type="text/x.enum",
+      response_schema=SummaryRating,
+    )
+  response = eval_chat.send_message(
     message="Convert the final score.",
     config=structured_output_config,
   )
+  #TODO: edit here for Gemma no response_mime_type
   structured_eval = response.parsed
 
   stop_ns = time.time_ns()

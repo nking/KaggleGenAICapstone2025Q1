@@ -9,6 +9,7 @@ from . import HasInternetConnection
 import trials
 import HttpsRequester
 import notebook_genai
+import file_fetcher
 
 class TestTrials(unittest.TestCase):
   def test_create_url(self):
@@ -80,17 +81,8 @@ class TestTrials(unittest.TestCase):
     self.assertEqual(1, idx)
 
   def _read_json_response_1(self):
-    working_dir = os.environ.get('PWD')
-    if working_dir.endswith("test"):
-      working_dir += "/../../"
-    flpath = working_dir + "/agent/testresources/clinical_trials_response_20250409.json"
-    try:
-      with open(flpath, 'r') as infile:
-        return infile.read().strip()
-    except FileNotFoundError:
-      print(f"{flpath} not found\n")
-    except ValueError:
-      print(f"Error: Invalid content in {flpath}.\n")
+    file_name ="clinical_trials_response_20250409.json"
+    return file_fetcher.get_testresource(file_name=file_name)
 
 if __name__ == '__main__':
   unittest.main()

@@ -21,7 +21,7 @@ feedback_flpath = feedback_dir + "feedback.log"
 llm_eval_dir = working_dir + 'data/eval/'
 llm_eval_flpath = llm_eval_dir + "llm.log"
 error_dir = working_dir + 'data/error/'
-error_flpath = feedback_dir + "err.log"
+error_flpath = error_dir + "err.log"
 
 if not os.path.exists(feedback_dir):
   os.makedirs(log_dir, exist_ok=True)

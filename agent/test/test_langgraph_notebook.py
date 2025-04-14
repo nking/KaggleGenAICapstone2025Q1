@@ -21,6 +21,7 @@ import os
 import re
 from contextlib import redirect_stdout
 import io
+import sys
 
 #The code is adpated from
 #adapted from https://www.kaggle.com/code/markishere/day-3-building-an-agent-with-langgraph
@@ -32,20 +33,19 @@ import io
 # and understand it in context of the recent history
 # (it's instructive to see how much the LLM is doing in the gemini invoke call instead)
 
-import debug_functions
+import mock_functions
 from trials import format_citations, get_clinical_trials_for_disease, format_trials
-from prompt import get_prompt
-from prompt_disease_name import get_disease_name_prompt
+from prompts import get_summarization_prompt, get_disease_name_prompt, get_welcome_msg
 from article import get_article_abstract_from_pubmed
 from notebook_genai import get_genAI_client, summarize_abstract, evaluate_the_summary, user_list_index_input
 from session_id import get_session_id
-from welcome_msg import get_welcome_msg
 from setup_logging import log_error
+from disease_choices_for_automated import select_disease_name_randomly
 
-AI_STUDIO_KEY = debug_functions.get_AI_STUDIO_API_KEY()
+AI_STUDIO_KEY = mock_functions.get_AI_STUDIO_API_KEY()
 os.environ["GOOGLE_API_KEY"] = AI_STUDIO_KEY
 
-NIH_API_KEY = debug_functions.get_NIH_API_KEY()
+NIH_API_KEY = mock_functions.get_NIH_API_KEY()
 
 class GraphState(TypedDict):
   messages: Annotated[list, add_messages]
@@ -70,7 +70,13 @@ def reset_graph_state(state: GraphState):
   if "disease" in state:
     state.pop("disease")
 
-_debug = True
+from enum import Enum
+class RunType(Enum):
+  DEBUG = 1
+  AUTOMATIC = 2
+  INTERACTIVE = 3
+
+run_type = RunType.AUTOMATIC
 verbosity = 1
 
 #langchain_google_genai.chat_models.ChatGoogleGenerativeAIError:
@@ -114,12 +120,19 @@ class MyTestCase(unittest.TestCase):
     #
     # the conditional END for each step is implemented by updating state for "next_node" each time
 
-    #TODO: remove message field
-
     def user_input_disease(state: GraphState) -> GraphState:
       #print(f"Model (user_input_disease) debug\n")
       reset_graph_state(state)
       state["q_id"] = 0 if "q_id" not in state else state["q_id"] + 1
+
+      if run_type == RunType.AUTOMATIC:
+        original_stdin = sys.stdin
+        if state["q_id"] > 0:
+          sys.stdin = io.StringIO("q\n")
+        else:
+          #sys.stdin = io.StringIO(f"{select_disease_name_randomly()}\n")
+          sys.stdin = io.StringIO("bronchitis")
+        sys_stdin = original_stdin
 
       #ask the user for the disease name then ask the llm if it recognizes the disease name
       max_iter = 10
@@ -148,14 +161,20 @@ class MyTestCase(unittest.TestCase):
       #return the entire state because we've reset fields and are modified others
       return state
 
+    def simulate_input_0_if_auto():
+      if run_type == RunType.AUTOMATIC:
+        original_stdin = sys.stdin
+        sys.stdin = io.StringIO("0\n")
+        sys_stdin = original_stdin
+
     def fetch_trials(state: GraphState) -> GraphState:
       #print(f"Model (fetch_trials_conditional) debug\n")
       if "disease" not in state:
         print("missing disease name")
         return {"next_node": "user_input_disease"}
       print("fetching trials...")
-      if _debug:
-        results = debug_functions.get_clinical_trials_for_disease(state["disease"])
+      if run_type == RunType.DEBUG:
+        results = mock_functions.get_clinical_trials_for_disease(state["disease"])
       else:
         results = get_clinical_trials_for_disease(state["disease"])
       if results is None or len(results) == 0:
@@ -168,6 +187,7 @@ class MyTestCase(unittest.TestCase):
       if "trials" not in state or len(state["trials"]) == 0:
         print("System Error.  no trials found.  please start again.")
         return {"next_node": "user_input_disease"}
+      simulate_input_0_if_auto()
       idx = user_list_index_input(options_name="trial", options_list=state["trials"], format_func=format_trials)
       if idx is None or idx == -1:
         return {"finished": True}
@@ -186,6 +206,7 @@ class MyTestCase(unittest.TestCase):
         print("System Error.  citations not found.  please choose another trial.")
         return {"next_node": "user_choose_trial_number"}
       citations = state["trials"][state["trial_number"]]["citations"]
+      simulate_input_0_if_auto()
       idx = user_list_index_input(options_name="citation", options_list=citations, format_func=format_citations)
       if idx is None or idx == -1:
         return {"finished": True}
@@ -197,12 +218,12 @@ class MyTestCase(unittest.TestCase):
         print("Error.  article id not found.  please choose a citation.")
         return {"next_node" : "user_choose_citation_number"}
       print("fetching article...")
-      if _debug:
-        results = debug_functions.get_article_abstract_from_pubmed(state["pmid"])
+      if run_type == RunType.DEBUG:
+        results = mock_functions.get_article_abstract_from_pubmed(state["pmid"])
       else:
         results = get_article_abstract_from_pubmed(state["pmid"], NIH_API_KEY)
       if results is None or len(results) == 0:
-        print(f'no articles found.  pubmed search for {state["pmid"]} failed.  please choose another citation\n')
+        print(f'no articles found.  pubmed search for {state["pmid"]} failed or the article did not have an abstract.  please choose another citation\n')
         return {"next_node" : "user_choose_citation_number"}
       return {"abstract": results, "next_node": "llm_summarization"}
 
@@ -211,14 +232,14 @@ class MyTestCase(unittest.TestCase):
       if "abstract" not in state or len(state["abstract"]) == 0:
         print("System Error.  no article found.  please choose another citation.")
         return {"next_node" : "user_choose_citation_number"}
-      if _debug:
+      if run_type == RunType.DEBUG:
         summary = "a summary of the abstract"
       else:
-        summary = summarize_abstract(session_id=s_id, q_id=state["q_id"], client=client, \
-          prompt = get_prompt(), abstract=state["abstract"],\
+        summary = summarize_abstract(session_id=s_id, query_number=state["q_id"], client=client, \
+          prompt = get_summarization_prompt(), abstract=state["abstract"],\
           model_name= model_name,  verbose=verbosity)
-        text_eval, struct_eval = evaluate_the_summary(session_id=s_id, q_id=state["q_id"], client=client, \
-          prompt = [get_prompt(), state["abstract"]], \
+        text_eval, struct_eval = evaluate_the_summary(session_id=s_id, query_number=state["q_id"], client=client, \
+          prompt = [get_summarization_prompt(), state["abstract"]], \
           summary = summary, model_name= model_name, verbose=verbosity)
         #the evaluation results are logged in the method
       print("Here is a summary of the abstract of the chosen citation.\n")

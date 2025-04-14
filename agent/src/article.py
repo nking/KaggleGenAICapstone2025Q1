@@ -22,9 +22,10 @@ def get_pubmed_request_url(pmid: str, NIH_API_KEY : str) -> str:
   if NIH_API_KEY is None:
     raise Exception("NIH_API_KEY cannot be none")
 
-  return f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed' \
-    + f'&id={pmid}&retstart=0&retmax=1&retmode=xml&rettext=xml' \
-    + f'&&api_key={NIH_API_KEY}'
+  #default return type is xml
+  #https://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.T._valid_values_of__retmode_and/?report=objectonly
+  return f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={pmid}&retstart=0&retmax=1' \
+    + f'&api_key={NIH_API_KEY}'
 
 def parse_and_filter(xml_resp : str) -> str:
   '''
@@ -46,10 +47,7 @@ def parse_and_filter(xml_resp : str) -> str:
       return None
 
     for element in elements:
-      label = element.attrib.get("Label")
       text = element.text
-      string_io.write(label)
-      string_io.write(": ")
       string_io.write(text)
       string_io.write("\n")
   except Exception as e:
