@@ -39,6 +39,7 @@ from prompt_disease_name import get_disease_name_prompt
 from article import get_article_abstract_from_pubmed
 from notebook_genai import get_genAI_client, summarize_abstract, evaluate_the_summary
 from session_id import get_session_id
+from welcome_msg import get_welcome_msg
 
 AI_STUDIO_KEY = debug_functions.get_AI_STUDIO_API_KEY()
 os.environ["GOOGLE_API_KEY"] = AI_STUDIO_KEY
@@ -79,7 +80,7 @@ verbosity = 1
 models = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemma-3-27b-it']
 model_name = models[2]
 
-WELCOME_MSG = "This librarian searches clinical trials for completed, published results and summarizes the results for you."
+WELCOME_MSG = get_welcome_msg()
 
 #TODO: put in testable script and write unit tests for it
 def user_list_index_input(options_name: str, options_list: list, format_func:Callable) -> int:
