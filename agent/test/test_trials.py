@@ -1,11 +1,14 @@
 import unittest
 from urllib.parse import urlparse
 import os
+import sys
+import io
 from . import HasInternetConnection
 #from ..src import trials
 #from ..src.HttpsRequester import HttpsRequester
 import trials
 import HttpsRequester
+import notebook_genai
 
 class TestTrials(unittest.TestCase):
   def test_create_url(self):
@@ -62,6 +65,19 @@ class TestTrials(unittest.TestCase):
         self.assertTrue(result['citations'])
         self.assertTrue(result['citations'][0]['pmid'])
         self.assertTrue(result['citations'][0]['citation'])
+
+  def simulate_user_input(self):
+    original_stdin = sys.stdin
+    sys.stdin = io.StringIO("1\n")
+    sys_stdin = original_stdin
+
+  def test_user_list_index_input(self):
+    content = self._read_json_response_1()
+    trials_list, nextPageToken = trials.parse_and_filter(content)
+    self.simulate_user_input()
+    idx = notebook_genai.user_list_index_input(options_name="trial", \
+                                         options_list=trials_list, format_func=trials.format_trials)
+    self.assertEqual(1, idx)
 
   def _read_json_response_1(self):
     working_dir = os.environ.get('PWD')

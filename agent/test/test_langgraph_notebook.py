@@ -37,9 +37,10 @@ from trials import format_citations, get_clinical_trials_for_disease, format_tri
 from prompt import get_prompt
 from prompt_disease_name import get_disease_name_prompt
 from article import get_article_abstract_from_pubmed
-from notebook_genai import get_genAI_client, summarize_abstract, evaluate_the_summary
+from notebook_genai import get_genAI_client, summarize_abstract, evaluate_the_summary, user_list_index_input
 from session_id import get_session_id
 from welcome_msg import get_welcome_msg
+from setup_logging import log_error
 
 AI_STUDIO_KEY = debug_functions.get_AI_STUDIO_API_KEY()
 os.environ["GOOGLE_API_KEY"] = AI_STUDIO_KEY
@@ -81,33 +82,6 @@ models = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemma-3-27b-it']
 model_name = models[2]
 
 WELCOME_MSG = get_welcome_msg()
-
-#TODO: put in testable script and write unit tests for it
-def user_list_index_input(options_name: str, options_list: list, format_func:Callable) -> int:
-  if options_name is None or options_list is None or len(options_list) == 0 or format_func is None:
-    return -1
-  max_iter = 10
-  num_iter = 0
-  while True:
-    #pprint(format_func(options_list))
-    print(format_func(options_list))
-    user_input = input(f'Please choose a {options_name} number from 0 to {len(options_list)} or q to quit\n:')
-    if user_input in {"q", "quit", "exit", "done", "goodbye"}:
-      return -1
-    if num_iter == max_iter:
-      print("Maximum number of attempts exceeded.  please start again.")
-      return -1
-    num_iter += 1
-    try:
-      idx = int(user_input)
-      if idx < 0 or idx >= len(options_list):
-        print(f'number must be in range 0 to {len(options_list)}\n')
-        continue
-      return idx
-    except Exception as ex:
-      # TODO: log error
-      continue
-  return None
 
 class MyTestCase(unittest.TestCase):
   def test_something(self):

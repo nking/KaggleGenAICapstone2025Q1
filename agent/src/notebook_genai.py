@@ -11,6 +11,7 @@ from google import genai
 from google.genai import types
 from google.api_core import retry
 from setup_logging import log_agent, log_llm_eval, log_user_feedback, get_agent_logger
+from typing import Callable
 
 from IPython.display import Markdown, display
 
@@ -167,3 +168,43 @@ def summarize_abstract(session_id : str, query_number : int, \
 def print_models(client : genai.Client) :
   for model in client.models.list():
     print(model.name)
+
+
+def user_list_index_input(options_name: str, options_list: list, format_func:Callable) -> int:
+  '''
+  given a list of options and an options_name to use in the query to the user, and given
+  a function to use to format the list of options into a printable string, ask the
+  user to select an option by the index. The user can select an index or q to quit.
+
+  Args:
+    options_name: the name of the option, e.g. citation
+    options_list: a list of options
+    format_func: a function that will return a string to print when given the options_list
+  Returns:
+    the index of the option chosen by the user, else a -1 if the user chose q to quit or took more than
+    the maximum number of retries to enter valid input.
+  '''
+  if options_name is None or options_list is None or len(options_list) == 0 or format_func is None:
+    return -1
+  max_iter = 10
+  num_iter = 0
+  while True:
+    #pprint(format_func(options_list))
+    print(format_func(options_list))
+    user_input = input(f'Please choose a {options_name} number from 0 to {len(options_list)} or q to quit\n:')
+    if user_input in {"q", "quit", "exit", "done", "goodbye"}:
+      return -1
+    if num_iter == max_iter:
+      print("Maximum number of attempts exceeded.  please start again.")
+      return -1
+    num_iter += 1
+    try:
+      idx = int(user_input)
+      if idx < 0 or idx >= len(options_list):
+        print(f'number must be in range 0 to {len(options_list)}\n')
+        continue
+      return idx
+    except Exception as ex:
+      print(f'error interpreting {idx} as a number. try again\n:')
+      continue
+  return None
