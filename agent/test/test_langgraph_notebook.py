@@ -9,7 +9,7 @@ from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, START, END
 from langchain_google_genai import ChatGoogleGenerativeAI
 from IPython.display import Image, display
-from pprint import pprint
+from pprint import pprint, pformat
 from langchain_core.messages.ai import AIMessage
 from langchain_core.tools import tool
 from langgraph.prebuilt import ToolNode
@@ -22,6 +22,7 @@ import re
 from contextlib import redirect_stdout
 import io
 import sys
+import threading
 
 #The code is adpated from
 #adapted from https://www.kaggle.com/code/markishere/day-3-building-an-agent-with-langgraph
@@ -37,7 +38,8 @@ import mock_functions
 from trials import format_citations, get_clinical_trials_for_disease, format_trials
 from prompts import get_summarization_prompt, get_disease_name_prompt, get_welcome_msg
 from article import get_article_abstract_from_pubmed
-from notebook_genai import get_genAI_client, summarize_abstract, evaluate_the_summary, user_list_index_input
+from notebook_genai import get_genAI_client, summarize_abstract, evaluate_the_summary, user_list_index_input, \
+  user_response_to_feedback_query, store_feedback_rating, store_feedback_reason
 from session_id import get_session_id
 from setup_logging import log_error
 from disease_choices_for_automated import select_disease_name_randomly
@@ -117,6 +119,8 @@ class MyTestCase(unittest.TestCase):
     #it's common for sequential chained workflows to outline the flow rather than leave it to LLM reasonong.
     #using langraph below for the flow control
 
+    #the agent tools are coded into these langgraph nodes (functions directly below), invoked client-side
+
     # nodes can return the modified field of state for efficient update of state,
     # or can modify state directly and return the whole state though this is inefficient because
     # the entire state is re-copied.
@@ -131,10 +135,10 @@ class MyTestCase(unittest.TestCase):
       if run_type == RunType.AUTOMATIC:
         original_stdin = sys.stdin
         if state["q_id"] > 0:
+          #for automatic setting, we only run text summarization once
           sys.stdin = io.StringIO("q\n")
         else:
-          #sys.stdin = io.StringIO(f"{select_disease_name_randomly()}\n")
-          sys.stdin = io.StringIO("bronchitis")
+          sys.stdin = io.StringIO(f"{select_disease_name_randomly()}\n")
 
       #ask the user for the disease name then ask the llm if it recognizes the disease name
       max_iter = 10
@@ -164,6 +168,9 @@ class MyTestCase(unittest.TestCase):
       return state
 
     def simulate_input_0_if_auto():
+      '''
+      a convenience method for automating user input for notebook when run_type is AUTOMATIC
+      '''
       if run_type == RunType.AUTOMATIC:
         original_stdin = sys.stdin
         sys.stdin = io.StringIO("0\n")
@@ -188,7 +195,8 @@ class MyTestCase(unittest.TestCase):
       if "trials" not in state or len(state["trials"]) == 0:
         print("System Error.  no trials found.  please start again.")
         return {"next_node": "user_input_disease"}
-      simulate_input_0_if_auto()
+      if run_type == RunType.AUTOMATIC:
+        simulate_input_0_if_auto()
       idx = user_list_index_input(options_name="trial", options_list=state["trials"], format_func=format_trials)
       if idx is None or idx == -1:
         return {"finished": True}
@@ -207,7 +215,8 @@ class MyTestCase(unittest.TestCase):
         print("System Error.  citations not found.  please choose another trial.")
         return {"next_node": "user_choose_trial_number"}
       citations = state["trials"][state["trial_number"]]["citations"]
-      simulate_input_0_if_auto()
+      if run_type == RunType.AUTOMATIC:
+        simulate_input_0_if_auto()
       idx = user_list_index_input(options_name="citation", options_list=citations, format_func=format_citations)
       if idx is None or idx == -1:
         return {"finished": True}
@@ -224,7 +233,7 @@ class MyTestCase(unittest.TestCase):
       else:
         results = get_article_abstract_from_pubmed(state["pmid"], NIH_API_KEY)
       if results is None or len(results) == 0:
-        print(f'no articles found.  pubmed search for {state["pmid"]} failed or the article did not have an abstract.  please choose another citation\n')
+        print(f'no articles found.  pubmed search for pmid={state["pmid"]} failed or the article did not have an abstract.  please choose another citation\n')
         return {"next_node" : "user_choose_citation_number"}
       return {"abstract": results, "next_node": "llm_summarization"}
 
@@ -239,12 +248,40 @@ class MyTestCase(unittest.TestCase):
         summary = summarize_abstract(session_id=s_id, query_number=state["q_id"], client=client, \
           prompt = get_summarization_prompt(), abstract=state["abstract"],\
           model_name= model_name,  verbose=verbosity)
-        text_eval, struct_eval = evaluate_the_summary(session_id=s_id, query_number=state["q_id"], client=client, \
-          prompt = [get_summarization_prompt(), state["abstract"]], \
-          summary = summary, model_name= model_name, verbose=verbosity)
-        #the evaluation results are logged in the method
+        # the evaluation results are logged in the method
+        # asynchronous to reduce user latency
+        thread1 = threading.Thread(target=evaluate_the_summary, \
+          args=(s_id, state["q_id"], client, [get_summarization_prompt(), state["abstract"]], \
+          summary, model_name, verbosity))
+        thread1.start()
+        #text_eval, struct_eval = evaluate_the_summary(session_id=s_id, query_number=state["q_id"], client=client, \
+        #  prompt = [get_summarization_prompt(), state["abstract"]], \
+        #  summary = summary, model_name= model_name, verbose=verbosity)
       print("Here is a summary of the abstract of the chosen citation.\n")
-      pprint(summary)
+      if model_name.lower().startswith("gemma"):
+        # correct pprint output to remove tuple wrap and explicit "\n" characters and line single quote wrappers
+        _summary = pformat(summary)
+        _summary = _summary[1:len(_summary)-1].replace("\\n", "")
+        _summary = _summary.replace("\'\'", "")
+        _summary = _summary.replace(" \'", "")
+        print(f"{_summary}")
+      else:
+        pprint(summary)
+      return {"next_node": "query_user_for_feedback"}
+
+    def query_user_for_feedback(state: GraphState) -> GraphState:
+      #print(f"Model (query_user_for_feedback) debug\n")
+      if run_type == RunType.AUTOMATIC:
+        sys.stdin = io.StringIO("y\n")
+      confirmed = user_response_to_feedback_query()
+      if confirmed:
+        if run_type == RunType.AUTOMATIC:
+          sys.stdin = io.StringIO("0\n")
+        resp = store_feedback_rating(session_id=s_id, query_number=state["q_id"])
+        if resp.lower().find("bad") > -1:
+          if run_type == RunType.AUTOMATIC:
+            sys.stdin = io.StringIO("3\n")
+          store_feedback_reason(session_id=s_id, query_number=state["q_id"])
       print("\n")
       return {"next_node": "user_input_disease"}
 
@@ -254,7 +291,7 @@ class MyTestCase(unittest.TestCase):
       return state["next_node"]
 
     functions = [user_input_disease, fetch_trials, user_choose_trial_number, user_choose_citation_number, \
-             fetch_abstract, llm_summarization]
+             fetch_abstract, llm_summarization, query_user_for_feedback]
 
     graph_builder = StateGraph(GraphState)
 
