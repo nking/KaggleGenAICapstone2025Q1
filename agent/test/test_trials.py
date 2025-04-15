@@ -56,8 +56,10 @@ class TestTrials(unittest.TestCase):
 
   def test_get_clinical_trials_for_disease(self):
     if HasInternetConnection.have_internet():
+      s_id = "123"
+      q_id = 0
       disease = "lung cancer"
-      results_list = trials.get_clinical_trials_for_disease(disease)
+      results_list = trials.get_clinical_trials_for_disease(s_id, q_id, disease)
       self.assertIsNotNone(results_list)
       for result in results_list:
         self.assertTrue(result['briefTitle'])

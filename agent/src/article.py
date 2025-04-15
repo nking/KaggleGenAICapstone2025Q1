@@ -8,6 +8,8 @@ from urllib.parse import quote
 from lxml import etree
 import HttpsRequester
 from setup_logging import log_error
+import time
+from setup_logging import log_agent
 
 def get_pubmed_request_url(pmid: str, NIH_API_KEY : str) -> str:
   '''
@@ -53,15 +55,20 @@ def parse_and_filter(xml_resp : str) -> str:
       string_io.write("\n")
   except Exception as e:
     print(f"Error parsing xml: {e}")
-    log_error("no_session_id", f"{e}")
+    log_error("no_session_id", f"xml_parse|err={e}")
     return None
   return string_io.getvalue()
 
 #TODO: consider how to replace w/ kaggle notebook secrets passing of api key
-def get_article_abstract_from_pubmed(pmid : str, NIH_API_KEY: str) -> str:
-  url_str =get_pubmed_request_url(pmid, NIH_API_KEY)
+def get_article_abstract_from_pubmed(session_id : str, query_number : int, \
+  pmid : str, NIH_API_KEY: str) -> str:
+  start_ns = time.time_ns()
+  url_str = get_pubmed_request_url(pmid, NIH_API_KEY)
   req = HttpsRequester.HttpsRequester()
   content = req.send_req(url_str)
+  stop_ns = time.time_ns()
+  elapsed_ns = stop_ns - start_ns
+  log_agent(session_id=session_id, msg=f'q={query_number}|pmid={pmid}|pubmed_fetch_time={elapsed_ns}')
   abstract = parse_and_filter(content)
   return abstract
 

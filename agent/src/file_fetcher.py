@@ -33,5 +33,5 @@ def read_file_contents(flpath: str):
       return infile.read().strip()
   except Exception as e:
     print(f"Error reading {flpath}\n")
-    log_error("no_session_id", f"err={e}")
+    log_error("no_session_id", f"file_read|err={e}")
     return None

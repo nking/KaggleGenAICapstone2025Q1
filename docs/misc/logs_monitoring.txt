@@ -1,0 +1,24 @@
+latency statements in bin/data/log/agent.log:
+   trials_fetch_time=
+   pubmed_fetch_time=
+   llm summarization_time=
+   llm eval_time=
+   llm disease_recog_time=
+
+other statements in bin/data/log/agent.log:
+   sum|n_input=  num tokens
+   sum|n_output= num tokens
+
+errors in bin/data/error/err.log
+   url=|err=
+   xml_parse|err=
+   file_read|err=
+   session_file_read|err=
+
+evals in bin/data/eval/llm.log
+   eval=rating
+   
+user feedback in bin/data/feedback/feedback.log
+   {options_name}=rating (reason)
+   {options_name}=reason for bad rating
+

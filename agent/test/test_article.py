@@ -29,14 +29,13 @@ class TestArticle(unittest.TestCase):
     abstract = article.parse_and_filter(content)
     self.assertIsNotNone(abstract)
 
-  def test_parse_req_parse_xml(self):
+  def test_get_article_abstract_from_pubmed(self):
     if HasInternetConnection.have_internet():
+      s_id = "123"
+      q_id = 0
       pmid = 21976132
       API_KEY = NIH_API_KEY.get_NIH_API_KEY()
-      url_str = article.get_pubmed_request_url(pmid, API_KEY)
-      req = HttpsRequester.HttpsRequester()
-      content = req.send_req(url_str)
-      abstract = article.parse_and_filter(content)
+      abstract = article.get_article_abstract_from_pubmed(s_id, q_id, pmid, NIH_API_KEY);
       self.assertIsNotNone(abstract)
 
   def _read_xml_response_1(self):

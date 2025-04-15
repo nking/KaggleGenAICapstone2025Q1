@@ -23,6 +23,7 @@ from contextlib import redirect_stdout
 import io
 import sys
 import threading
+import time
 
 #The code is adpated from
 #adapted from https://www.kaggle.com/code/markishere/day-3-building-an-agent-with-langgraph
@@ -41,7 +42,7 @@ from article import get_article_abstract_from_pubmed
 from notebook_genai import get_genAI_client, summarize_abstract, evaluate_the_summary, user_list_index_input, \
   user_response_to_feedback_query, store_feedback_rating, store_feedback_reason
 from session_id import get_session_id
-from setup_logging import log_error
+from setup_logging import log_error, log_agent
 from disease_choices_for_automated import select_disease_name_randomly
 from . import HasInternetConnection
 
@@ -148,9 +149,14 @@ class MyTestCase(unittest.TestCase):
         user_input = user_input.strip()
         if user_input in {"q", "quit", "exit", "done", "goodbye"}:
           return {"finished": True}
+
+        start_ns = time.time_ns()
         _prompt = get_disease_name_prompt(user_input)
         #ask the llm if it recognizes the name:
         response = disease_name_checker.invoke(_prompt)
+        stop_ns = time.time_ns()
+        elapsed_ns = stop_ns - start_ns
+        log_agent(session_id=s_id, msg=f'q={state["q_id"]}|llm_disease_recog_time={elapsed_ns}')
         if response.content.lower().startswith("no"):
           user_input_2 = input(f"I don't recognize {user_input} as a disease name but clinicaltrials.gov might.\nType 0 to proceed or Type 1 to retype the disease name.\n:")
           user_input_2 = user_input_2.strip()
@@ -184,7 +190,7 @@ class MyTestCase(unittest.TestCase):
       if run_type == RunType.DEBUG:
         results = mock_functions.get_clinical_trials_for_disease(state["disease"])
       else:
-        results = get_clinical_trials_for_disease(state["disease"])
+        results = get_clinical_trials_for_disease(s_id, state["q_id"], state["disease"])
       if results is None or len(results) == 0:
         print("No trials were found.  The search at clinicaltrials.gov uses synonyms, but you might want to try different words.")
         return {"next_node": "user_input_disease"}
@@ -231,7 +237,7 @@ class MyTestCase(unittest.TestCase):
       if run_type == RunType.DEBUG:
         results = mock_functions.get_article_abstract_from_pubmed(state["pmid"])
       else:
-        results = get_article_abstract_from_pubmed(state["pmid"], NIH_API_KEY)
+        results = get_article_abstract_from_pubmed(s_id, state["q_id"], state["pmid"], NIH_API_KEY)
       if results is None or len(results) == 0:
         print(f'no articles found.  pubmed search for pmid={state["pmid"]} failed or the article did not have an abstract.  please choose another citation\n')
         return {"next_node" : "user_choose_citation_number"}

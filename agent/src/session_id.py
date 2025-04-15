@@ -26,7 +26,7 @@ def get_session_id():
         return int(content)
     except Exception as e:
       print(f"Error reading {_session_file}\n")
-      log_error("no_session_id", f"err={e}")
+      log_error("no_session_id", f"session_file_read|err={e}")
       #drop through to create a new session id
   session_id = int.from_bytes(secrets.token_bytes(16), byteorder='big')
   # random_hex = random_int.hex()

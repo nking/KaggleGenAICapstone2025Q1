@@ -112,7 +112,7 @@ def evaluate_the_summary(session_id : str, query_number : int, \
 
   stop_ns = time.time_ns()
   elapsed_ns = stop_ns - start_ns
-  log_agent(session_id=session_id, msg=f'q={query_number}|eval time: {elapsed_ns}')
+  log_agent(session_id=session_id, msg=f'q={query_number}|eval_time={elapsed_ns}')
 
   log_llm_eval(session_id=session_id, msg=f'q={query_number}|eval={structured_eval}')
 
@@ -161,13 +161,13 @@ def summarize_abstract(session_id : str, query_number : int, \
   elapsed_ns = stop_ns - start_ns
 
   logger = get_agent_logger()
-  log_agent(session_id=session_id, msg=f'q={query_number}|summary time: {elapsed_ns}', logger=logger)
+  log_agent(session_id=session_id, msg=f'q={query_number}|summarization_time={elapsed_ns}', logger=logger)
 
   num_input_tokens = client.models.count_tokens(
     model=model_name, contents=[prompt, abstract]
   )
-  log_agent(session_id=session_id, msg=f'q={query_number}| n_input: {num_input_tokens}', logger=logger)
-  log_agent(session_id=session_id, msg=f'q={query_number}| n_output: {response.usage_metadata}', logger=logger)
+  log_agent(session_id=session_id, msg=f'q={query_number}|sum|n_input={num_input_tokens}', logger=logger)
+  log_agent(session_id=session_id, msg=f'q={query_number}|sum|n_output={response.usage_metadata}', logger=logger)
 
   if verbose > 0:
     print(f'LLM summary:\n{response.text}\n')

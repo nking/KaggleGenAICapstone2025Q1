@@ -1,7 +1,7 @@
 #manually uncomment this in jupyter notebook
 #!pip install -q concurrent_log_handler
 
-#TODO: swap out the logging library.  sometimes double logs an item, that is 2 identical rows
+#TODO: swap out the logging library:.  sometimes double logs an item, that is 2 identical rows
 
 import time
 import logging

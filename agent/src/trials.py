@@ -3,6 +3,8 @@ import json
 import HttpsRequester
 import io
 from setup_logging import log_error
+import time
+from setup_logging import log_agent
 
 def get_trial_request_url(disease: str) -> str:
   '''
@@ -79,9 +81,13 @@ def format_trials(trials: list) -> str:
     string_io.write(f"   organization: {cit['organization']}\n")
   return string_io.getvalue()
 
-def get_clinical_trials_for_disease(disease: str) -> list:
+def get_clinical_trials_for_disease(session_id : str, query_number : int, disease: str) -> list:
+  start_ns = time.time_ns()
   url_str = get_trial_request_url(disease)
   req = HttpsRequester.HttpsRequester()
   content = req.send_req(url_str)
+  stop_ns = time.time_ns()
+  elapsed_ns = stop_ns - start_ns
+  log_agent(session_id=session_id, msg=f'q={query_number}|disease={disease}|trials_fetch_time={elapsed_ns}')
   results_list, nextPageToken = parse_and_filter(content)
   return results_list
