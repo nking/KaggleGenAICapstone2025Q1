@@ -70,7 +70,6 @@ class TestTrials(unittest.TestCase):
   def simulate_user_input(self):
     original_stdin = sys.stdin
     sys.stdin = io.StringIO("1\n")
-    sys_stdin = original_stdin
 
   def test_user_list_index_input(self):
     content = self._read_json_response_1()

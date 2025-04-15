@@ -12,13 +12,15 @@ from google.genai import types
 from google.api_core import retry
 from setup_logging import log_agent, log_llm_eval, log_user_feedback, get_agent_logger
 from typing import Callable
+import io
+from collections import OrderedDict
 
 from IPython.display import Markdown, display
 
 genai.__version__
 
 import enum
-from prompts import get_eval_instruction
+from prompts import get_eval_instruction, get_feedback_query
 
 class SummaryRating(enum.Enum):
   VERY_GOOD = '5'
@@ -27,17 +29,18 @@ class SummaryRating(enum.Enum):
   BAD = '2'
   VERY_BAD = '1'
 
-class UserFeedBack(enum.Enum):
-  VERY_GOOD = '5'
-  GOOD = '4'
-  OK = '3'
-  BAD = '2'
-  VERY_BAD = '1'
+user_feedback_dict = OrderedDict()
+user_feedback_dict['VERY_GOOD'] = 5
+user_feedback_dict['GOOD'] = 4
+user_feedback_dict['OK'] = 3
+user_feedback_dict['BAD'] = 2
+user_feedback_dict['VERYBAD'] = 1
 
-class ReasonForBad(enum.Enum):
-  TRIALS_NOT_RELEVANT = '3'
-  BAD_RESULTS_SUMMARY = '2'
-  ERROR = '1'
+reason_for_bad_dict = OrderedDict()
+reason_for_bad_dict['TRIALS_NOT_RELEVANT'] = 0
+reason_for_bad_dict['BAD_RESULTS_SUMMARY'] = 1
+reason_for_bad_dict['ERRORS'] = 2
+reason_for_bad_dict['OTHER'] = 3
 
 def init_generate_content_retry():
   is_retriable = lambda e: (isinstance(e, genai.errors.APIError) and e.code in {429, 503})
@@ -179,6 +182,57 @@ def print_models(client : genai.Client) :
   for model in client.models.list():
     print(model.name)
 
+def user_response_to_feedback_query() -> bool:
+  '''
+  query user for whether they would like to leave feedback.
+
+  Returns:
+    True if user responded y, else False
+  '''
+  query = get_feedback_query()
+  user_input = input(f'{query}\n(y or n): ')
+  user_input = user_input.strip()
+  if user_input.lower() not in {"y", "yes"}:
+    return False
+  return True
+
+def simple_list_format(a_list : list):
+  string_io = io.StringIO()
+  for i, a in enumerate(a_list):
+    string_io.write(f"{i} {a}\n")
+  return string_io.getvalue()
+
+def store_feedback_rating(session_id: str, query_number: int) -> str:
+  '''
+  after user has consented to user_response_to_feedback_query()
+  this method can be invoked to query them and log the responses.
+  '''
+  options_list = [k for k in user_feedback_dict]
+  print("Please rate your text summarization for the disease trial:")
+  options_name = "rating"
+  idx = user_list_index_input(options_name=options_name, options_list=options_list, format_func=simple_list_format)
+  if idx == -1:
+    return None
+  print(f"received {idx}\n")
+  log_user_feedback(session_id, f'q_id={query_number}|{options_name}={idx, options_list[idx]}')
+  print("Thank you for the feedback!")
+  return options_list[idx]
+
+def store_feedback_reason(session_id: str, query_number: int):
+  '''
+  after user has consented to user_response_to_feedback_query() and submitted a bad rating,
+  this method can be invoked to query them and log the responses.
+  '''
+  print("\nPlease choose the closest reason for the poor experience:")
+  options_list = [k for k in reason_for_bad_dict]
+  options_name = "reason"
+  idx = user_list_index_input(options_name=options_name, options_list=options_list, format_func=simple_list_format)
+  if idx == -1:
+    print("Thank you for the feedback!")
+    return
+  print(f"received {idx}\n")
+  log_user_feedback(session_id, f'q_id={query_number}|{options_name}={idx, options_list[idx]}')
+  print("Thank you for the feedback!")
 
 def user_list_index_input(options_name: str, options_list: list, format_func:Callable) -> int:
   '''

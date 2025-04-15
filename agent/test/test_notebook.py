@@ -7,8 +7,52 @@ import prompts
 import setup_logging
 from . import HasInternetConnection
 from . import AI_Studio_API_KEY
+import sys
+import io
+import time
 
 class TestTrials(unittest.TestCase):
+
+  def test_simple_list_format(self):
+    a_list = ["rating 1", "rating 2", "rating 3"]
+    fmted = notebook_genai.simple_list_format(a_list)
+    self.assertIsNotNone(fmted)
+
+  def test_user_feedback(self):
+    s_id = session_id.get_session_id()
+    original_stdin = sys.stdin
+    # sys.stdin = original_stdin
+
+    sys.stdin = io.StringIO("y\n")
+    confirmed = notebook_genai.user_response_to_feedback_query()
+    self.assertTrue(confirmed)
+
+    sys.stdin = io.StringIO("n\n")
+    confirmed = notebook_genai.user_response_to_feedback_query()
+    self.assertFalse(confirmed)
+
+    #after True from user_response_to_feedback_query
+    n_lines = self._count_feedback_log_lines()
+    q_id = 0
+    sys.stdin = io.StringIO("0\n")
+    resp = notebook_genai.store_feedback_rating(session_id = s_id, query_number = q_id)
+    self.assertEqual(-1, resp.lower().find("bad"))
+    n_lines_2 = self._count_feedback_log_lines()
+    self.assertTrue(n_lines_2 > n_lines)
+
+    q_id += 1
+    sys.stdin = io.StringIO("3\n")
+    resp = notebook_genai.store_feedback_rating(session_id=s_id, query_number=q_id)
+    self.assertTrue(resp.lower().find("bad") > -1)
+    n_lines_3 = self._count_feedback_log_lines()
+    self.assertTrue(n_lines_3 > n_lines_2)
+
+    q_id += 1
+    sys.stdin = io.StringIO("3\n")
+    notebook_genai.store_feedback_reason(session_id=s_id, query_number=q_id)
+    n_lines_4 = self._count_feedback_log_lines()
+    self.assertTrue(n_lines_4 > n_lines_3)
+
   def test_summarization(self):
     if not HasInternetConnection.have_internet():
       return
@@ -77,6 +121,16 @@ class TestTrials(unittest.TestCase):
 
   def _count_agent_log_lines(self):
     flpath = setup_logging.agent_flpath
+    try:
+      with open(flpath, 'r') as infile:
+        return len(infile.readlines())
+    except FileNotFoundError:
+      print(f"{flpath} not found\n")
+    except ValueError:
+      print(f"Error: Invalid content in {flpath}.\n")
+
+  def _count_feedback_log_lines(self):
+    flpath = setup_logging.feedback_flpath
     try:
       with open(flpath, 'r') as infile:
         return len(infile.readlines())

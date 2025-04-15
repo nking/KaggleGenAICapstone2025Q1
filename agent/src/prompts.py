@@ -13,6 +13,10 @@ def get_welcome_msg(version: str = "V1.0", language: str = "en"):
   file_name = "welcome_msg.txt"
   return file_fetcher.get_resource(file_name=file_name, asset_type="text", version=version, language=language)
 
+def get_feedback_query(version: str = "V1.0", language: str = "en"):
+  file_name = "feedback_query.txt"
+  return file_fetcher.get_resource(file_name=file_name, asset_type="text", version=version, language=language)
+
 def get_eval_instruction(version: str = "V1.0", language: str = "en"):
   '''
   get an instruction for Pointwise summarization quality.  The string needs to

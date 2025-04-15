@@ -78,7 +78,7 @@ class RunType(Enum):
   INTERACTIVE = 3
 
 run_type = RunType.AUTOMATIC
-verbosity = 1
+verbosity = 0
 
 #langchain_google_genai.chat_models.ChatGoogleGenerativeAIError:
 # Invalid argument provided to Gemini: 400 Function calling is not enabled for models/gemma-3-27b-it
@@ -135,7 +135,6 @@ class MyTestCase(unittest.TestCase):
         else:
           #sys.stdin = io.StringIO(f"{select_disease_name_randomly()}\n")
           sys.stdin = io.StringIO("bronchitis")
-        sys_stdin = original_stdin
 
       #ask the user for the disease name then ask the llm if it recognizes the disease name
       max_iter = 10
@@ -168,7 +167,6 @@ class MyTestCase(unittest.TestCase):
       if run_type == RunType.AUTOMATIC:
         original_stdin = sys.stdin
         sys.stdin = io.StringIO("0\n")
-        sys_stdin = original_stdin
 
     def fetch_trials(state: GraphState) -> GraphState:
       #print(f"Model (fetch_trials_conditional) debug\n")

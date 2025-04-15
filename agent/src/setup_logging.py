@@ -1,6 +1,8 @@
 #manually uncomment this in jupyter notebook
 #!pip install -q concurrent_log_handler
 
+#TODO: swap out the logging library.  sometimes double logs an item, that is 2 identical rows
+
 import time
 import logging
 from concurrent_log_handler import ConcurrentRotatingFileHandler
@@ -22,6 +24,7 @@ llm_eval_dir = working_dir + 'data/eval/'
 llm_eval_flpath = llm_eval_dir + "llm.log"
 error_dir = working_dir + 'data/error/'
 error_flpath = error_dir + "err.log"
+
 
 if not os.path.exists(feedback_dir):
   os.makedirs(log_dir, exist_ok=True)
@@ -46,17 +49,22 @@ def get_logger(log_flpath : str, logger_name : str) -> logging.Logger:
   logger.addHandler(handler)
   return logger
 
+agent_logger = get_logger(agent_flpath, "agent")
+eval_logger = get_logger(llm_eval_flpath, "llm_eval")
+feedback_logger = get_logger(feedback_flpath, "feedback")
+error_logger = get_logger(error_flpath, "error")
+
 def get_agent_logger():
-    return get_logger(agent_flpath, "agent")
+  return agent_logger
 
 def get_llm_eval_logger():
-  return get_logger(llm_eval_flpath, "llm_eval")
+  return eval_logger
 
 def get_feedback_logger():
-  return get_logger(feedback_flpath, "feedback")
+  return feedback_logger
 
 def get_error_logger():
-  return get_logger(error_flpath, "error")
+  return error_logger
 
 def get_timestamp():
   return time.time_ns()

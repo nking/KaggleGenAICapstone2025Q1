@@ -19,5 +19,9 @@ class TestPrompt(unittest.TestCase):
     prompt = prompts.get_welcome_msg()
     self.assertIsNotNone(prompt)
 
+  def test_get_feedback_query(self):
+    prompt = prompts.get_feedback_query()
+    self.assertIsNotNone(prompt)
+
 if __name__ == '__main__':
   unittest.main()
