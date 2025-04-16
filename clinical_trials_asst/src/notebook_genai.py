@@ -126,7 +126,7 @@ def summarize_abstract(session_id : str, query_number : int, \
   client : genai.Client, prompt: str, abstract : str, \
   model_name : str ="gemini-1.5-flash", verbose : int = 0) -> str:
   """summarize the abstract using the given client and prompt.
-  the method also logs to the agent log file.
+  the method also logs to the clinical_trials_asst log file.
   Args:
     session_id: session id of user
     query_number: the current query number for a summarize task from the user
@@ -213,7 +213,7 @@ def store_feedback_rating(session_id: str, query_number: int) -> str:
   idx = user_list_index_input(options_name=options_name, options_list=options_list, format_func=simple_list_format)
   if idx == -1:
     return None
-  print(f"received {idx}\n")
+  print(f"received {idx, options_list[idx]}\n")
   log_user_feedback(session_id, f'q_id={query_number}|{options_name}={idx, options_list[idx]}')
   print("Thank you for the feedback!")
   return options_list[idx]
@@ -230,7 +230,7 @@ def store_feedback_reason(session_id: str, query_number: int):
   if idx == -1:
     print("Thank you for the feedback!")
     return
-  print(f"received {idx}\n")
+  print(f"received {idx, options_list[idx]}\n")
   log_user_feedback(session_id, f'q_id={query_number}|{options_name}={idx, options_list[idx]}')
   print("Thank you for the feedback!")
 
@@ -255,7 +255,7 @@ def user_list_index_input(options_name: str, options_list: list, format_func:Cal
   while True:
     #pprint(format_func(options_list))
     print(format_func(options_list))
-    user_input = input(f'Please choose a {options_name} number from 0 to {len(options_list)} or q to quit\n:')
+    user_input = input(f'Please choose a {options_name} number from 0 to {len(options_list)-1} or q to quit\n:')
     if user_input in {"q", "quit", "exit", "done", "goodbye"}:
       return -1
     if num_iter == max_iter:

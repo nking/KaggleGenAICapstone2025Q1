@@ -110,7 +110,7 @@ class MyTestCase(unittest.TestCase):
     #it's common for sequential chained workflows to outline the flow rather than leave it to LLM reasonong.
     #using langraph below for the flow control
 
-    #the agent tools are coded into these langgraph nodes (functions directly below), invoked client-side
+    #the clinical_trials_asst tools are coded into these langgraph nodes (functions directly below), invoked client-side
 
     # nodes can return the modified field of state for efficient update of state,
     # or can modify state directly and return the whole state though this is inefficient because
@@ -175,7 +175,7 @@ class MyTestCase(unittest.TestCase):
       if "disease" not in state:
         print("missing disease name")
         return {"next_node": "user_input_disease"}
-      print("fetching trials...")
+      print(f'\nfetching trials for {state["disease"]}...\n')
       if run_type == RunType.DEBUG:
         results = mock_functions.get_clinical_trials_for_disease(state["disease"])
       else:
@@ -222,7 +222,7 @@ class MyTestCase(unittest.TestCase):
       if "pmid" not in state:
         print("Error.  article id not found.  please choose a citation.")
         return {"next_node" : "user_choose_citation_number"}
-      print("fetching article...")
+      print(f'\nfetching article for pmid {state["pmid"]}...\n')
       if run_type == RunType.DEBUG:
         results = mock_functions.get_article_abstract_from_pubmed(state["pmid"])
       else:

@@ -5,6 +5,19 @@ from urllib3 import Retry
 import time
 from setup_logging import log_error
 
+def mask_API_KEY(req_url: str):
+  # entrez url has api_key as last item
+  i = req_url.find("api_key")
+  if i == -1:
+    return req_url
+  p1 = req_url[0:i]
+  p2 = req_url[i:]
+  i2 = p2.find("&")
+  if i2 > -1:
+    p2 = p2[i2:]
+    p1 += p2
+  return p1
+
 class HttpsRequester:
   '''
   send an https or http request given a url, a max number of 3 retries and a backoff factor of 1.  (no handling of post data)
@@ -43,16 +56,3 @@ class HttpsRequester:
       #print('Request successful!')
       return response.content
     return None
-
-  def mask_API_KEY(self, req_url: str):
-    # entrez url has api_key as last item
-    i = req_url.find("api_key")
-    if i == -1:
-      return req_url
-    p1 = req_url[0:i]
-    p2 = req_url[i:]
-    i2 = p2.find("&")
-    if i2 > -1:
-      p2 = p2[i2:]
-      p1 += p2
-    return p1

@@ -21,7 +21,7 @@ def _read_pubmed_response():
     working_dir = os.environ.get('PWD')
     if working_dir.endswith("test"):
       working_dir += "/../../"
-    flpath = working_dir + "/agent/testresources/entrez_pubmed_response_20250409.xml"
+    flpath = working_dir + "/clinical_trials_asst/testresources/entrez_pubmed_response_20250409.xml"
     try:
       with open(flpath, 'r') as infile:
         return infile.read().strip()
@@ -34,7 +34,7 @@ def get_NIH_API_KEY():
   working_dir = os.environ.get('PWD')
   if working_dir.endswith("test"):
     working_dir += "/../.."
-  working_dir += "/agent/testresources"
+  working_dir += "/clinical_trials_asst/testresources"
   filepath = working_dir + "/NIH_API_KEY.txt"
   with open(filepath, 'r') as f:
     key = f.read().strip()
@@ -44,7 +44,7 @@ def get_AI_STUDIO_API_KEY():
   working_dir = os.environ.get('PWD')
   if working_dir.endswith("test"):
     working_dir += "/../.."
-  working_dir += "/agent/testresources"
+  working_dir += "/clinical_trials_asst/testresources"
   filepath = working_dir + "/AI_Studio_API_KEY.txt"
   with open(filepath, 'r') as f:
     key = f.read().strip()

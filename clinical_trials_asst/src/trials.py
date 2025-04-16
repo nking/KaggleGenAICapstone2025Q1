@@ -70,15 +70,15 @@ def format_citations(citations: list) -> str:
   string_io = io.StringIO()
   #TODO: could improve this to place names, title, publication information each on separate lines.
   for i, cit in enumerate(citations):
-    string_io.write(f"{i}  {cit['citation']}\n")
+    string_io.write(f"\n{i}\n{cit['citation']}\n")
   return string_io.getvalue()
 
 def format_trials(trials: list) -> str:
   string_io = io.StringIO()
   for i, cit in enumerate(trials):
-    string_io.write(f"{i}  full title: {cit['officialTitle']}\n")
-    string_io.write(f"   brief title: {cit['briefTitle']}\n")
-    string_io.write(f"   organization: {cit['organization']}\n")
+    string_io.write(f"\n{i}:\nfull title: {cit['officialTitle']}\n")
+    string_io.write(f"brief title: {cit['briefTitle']}\n")
+    string_io.write(f"organization: {cit['organization']}\n")
   return string_io.getvalue()
 
 def get_clinical_trials_for_disease(session_id : str, query_number : int, disease: str) -> list:

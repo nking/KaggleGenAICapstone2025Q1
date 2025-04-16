@@ -17,7 +17,7 @@ if not working_dir.startswith("/kaggle/working"):
     working_dir += "/bin/"
 
 log_dir = working_dir + 'data/log/'
-agent_flpath = log_dir + "agent.log"
+agent_flpath = log_dir + "clinical_trials_asst.log"
 feedback_dir = working_dir + 'data/feedback/'
 feedback_flpath = feedback_dir + "feedback.log"
 llm_eval_dir = working_dir + 'data/eval/'
@@ -49,7 +49,7 @@ def get_logger(log_flpath : str, logger_name : str) -> logging.Logger:
   logger.addHandler(handler)
   return logger
 
-agent_logger = get_logger(agent_flpath, "agent")
+agent_logger = get_logger(agent_flpath, "clinical_trials_asst")
 eval_logger = get_logger(llm_eval_flpath, "llm_eval")
 feedback_logger = get_logger(feedback_flpath, "feedback")
 error_logger = get_logger(error_flpath, "error")
@@ -98,4 +98,4 @@ def log_agent(session_id: str, msg : str, logger: logging.Logger = None):
     logger = get_agent_logger()
   stmt = f"{get_timestamp()}|{session_id}|{msg}"
   logger.info(stmt)
-  log_to_cloud(stmt, 'agent')
+  log_to_cloud(stmt, 'clinical_trials_asst')

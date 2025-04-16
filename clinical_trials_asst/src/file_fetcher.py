@@ -3,7 +3,7 @@ from setup_logging import log_error
 
 def get_base_dir():
   working_dir = os.environ.get('PWD')
-  #base_dir/agent/test
+  #base_dir/clinical_trials_asst/test
   if working_dir.endswith("test"):
     working_dir += "/../../"
   return working_dir

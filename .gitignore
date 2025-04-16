@@ -4,9 +4,9 @@ __pycache__/
 *$py.class
 
 NIH_API_KEY.txt
-agent/testresources/NIH_API_KEY.txt
+clinical_trials_asst/testresources/NIH_API_KEY.txt
 AI_Studio_API_KEY.txt
-agent/testresources/AI_Studio_API_KEY.txt
+clinical_trials_asst/testresources/AI_Studio_API_KEY.txt
 
 # C extensions
 *.so

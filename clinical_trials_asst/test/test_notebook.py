@@ -106,7 +106,7 @@ class TestTrials(unittest.TestCase):
 
     n_lines_agent_2 = self._count_agent_log_lines()
     n_lines_eval_2 = self._count_eval_log_lines()
-    # agent logs should have 3 more lines, but there is buffered
+    # clinical_trials_asst logs should have 3 more lines, but there is buffered
     self.assertTrue(n_lines_agent_2 - n_lines_agent > 0)
     self.assertTrue(n_lines_eval_2 - n_lines_eval > 0)
 
