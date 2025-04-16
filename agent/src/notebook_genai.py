@@ -19,10 +19,10 @@ from IPython.display import Markdown, display
 
 genai.__version__
 
-import enum
+from enum import Enum
 from prompts import get_eval_instruction, get_feedback_query
 
-class SummaryRating(enum.Enum):
+class SummaryRating(Enum):
   VERY_GOOD = '5'
   GOOD = '4'
   OK = '3'
