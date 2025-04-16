@@ -1,5 +1,3 @@
-from urllib.parse import quote
-
 #NOTE: this could be modified for batch requests
 #  and in that case, might want to use pyMed
 #NOTE: I couldn't find version information for the entrez code, so just note that this request and parsing worked in April 2025

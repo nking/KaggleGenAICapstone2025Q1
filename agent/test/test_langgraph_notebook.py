@@ -2,24 +2,14 @@
 # latest version is langchain-google-genai==2.1.2
 #   latest version of the langraph libs might be later, but might not be compatible
 import unittest
-from langchain_core.prompts import ChatPromptTemplate
-from typing import Annotated, Literal, Union, Callable
+from typing import Annotated
 from typing_extensions import TypedDict
 from langgraph.graph.message import add_messages
 from langgraph.graph import StateGraph, START, END
 from langchain_google_genai import ChatGoogleGenerativeAI
 from IPython.display import Image, display
 from pprint import pprint, pformat
-from langchain_core.messages.ai import AIMessage
-from langchain_core.tools import tool
-from langgraph.prebuilt import ToolNode
-from collections.abc import Iterable
-from random import randint
-from langchain_core.messages.tool import ToolMessage
-from langchain_core.tools.render import render_text_description
 import os
-import re
-from contextlib import redirect_stdout
 import io
 import sys
 import threading
@@ -178,7 +168,6 @@ class MyTestCase(unittest.TestCase):
       a convenience method for automating user input for notebook when run_type is AUTOMATIC
       '''
       if run_type == RunType.AUTOMATIC:
-        original_stdin = sys.stdin
         sys.stdin = io.StringIO("0\n")
 
     def fetch_trials(state: GraphState) -> GraphState:

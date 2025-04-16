@@ -71,7 +71,7 @@ def get_timestamp():
 
 def log_to_cloud(msg: str, log_type: str):
   '''
-  a stub for a cloud method
+  a stub for a cloud API method
   '''
   pass
 
