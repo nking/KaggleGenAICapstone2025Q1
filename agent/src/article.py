@@ -4,7 +4,7 @@
 
 #!pip install -q lxml
 from lxml import etree
-import HttpsRequester
+from HttpsRequester import HttpsRequester
 from setup_logging import log_error
 import time
 from setup_logging import log_agent
@@ -25,10 +25,9 @@ def get_pubmed_request_url(pmid: str, NIH_API_KEY : str) -> str:
 
   #default return type is xml
   #https://www.ncbi.nlm.nih.gov/books/NBK25499/table/chapter4.T._valid_values_of__retmode_and/?report=objectonly
-  return f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={pmid}&retstart=0&retmax=1' \
-    + f'&api_key={NIH_API_KEY}'
+  return f'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={pmid}&retstart=0&retmax=1&api_key={NIH_API_KEY}'
 
-def parse_and_filter(xml_resp : str) -> str:
+def parse_and_filter_article(xml_resp : str) -> str:
   '''
   Args:
     an XML response from PubMed
@@ -62,12 +61,12 @@ def get_article_abstract_from_pubmed(session_id : str, query_number : int, \
   pmid : str, NIH_API_KEY: str) -> str:
   start_ns = time.time_ns()
   url_str = get_pubmed_request_url(pmid, NIH_API_KEY)
-  req = HttpsRequester.HttpsRequester()
+  req = HttpsRequester()
   content = req.send_req(url_str)
   stop_ns = time.time_ns()
   elapsed_ns = stop_ns - start_ns
   log_agent(session_id=session_id, msg=f'q={query_number}|pmid={pmid}|pubmed_fetch_time={elapsed_ns}')
-  abstract = parse_and_filter(content)
+  abstract = parse_and_filter_article(content)
   return abstract
 
 

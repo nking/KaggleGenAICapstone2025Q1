@@ -1,12 +1,8 @@
 import unittest
 from urllib.parse import urlparse
-import os
-#from ..src import article
-#from ..src.HttpsRequester import HttpsRequester
 from . import NIH_API_KEY
 from . import HasInternetConnection
 import article
-import HttpsRequester
 import file_fetcher
 
 class TestArticle(unittest.TestCase):
@@ -26,7 +22,7 @@ class TestArticle(unittest.TestCase):
 
   def test_parse_xml(self):
     content = self._read_xml_response_1()
-    abstract = article.parse_and_filter(content)
+    abstract = article.parse_and_filter_article(content)
     self.assertIsNotNone(abstract)
 
   def test_get_article_abstract_from_pubmed(self):
@@ -35,7 +31,7 @@ class TestArticle(unittest.TestCase):
       q_id = 0
       pmid = 21976132
       API_KEY = NIH_API_KEY.get_NIH_API_KEY()
-      abstract = article.get_article_abstract_from_pubmed(s_id, q_id, pmid, NIH_API_KEY);
+      abstract = article.get_article_abstract_from_pubmed(s_id, q_id, pmid, API_KEY);
       self.assertIsNotNone(abstract)
 
   def _read_xml_response_1(self):

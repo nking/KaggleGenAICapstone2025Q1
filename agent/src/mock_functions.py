@@ -14,7 +14,7 @@ def get_clinical_trials_for_disease(disease : str) -> list:
 
 def get_article_abstract_from_pubmed(pmid : str) -> str:
   content = _read_pubmed_response()
-  abstract = article.parse_and_filter(content)
+  abstract = article.parse_and_filter_article(content)
   return abstract
 
 def _read_pubmed_response():
