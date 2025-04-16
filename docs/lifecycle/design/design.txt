@@ -60,7 +60,7 @@ Stories:
 (16) remove the seed data generation method as it detracts from the
      notebook explanations
 
-Main Agent cell as UML Sequence diagram (column timelines are implied):
+Agent calls as UML Sequence diagram (column timelines are implied):
 
 User     Agent    Functions          LLM         Support  Logs LLM2
      ->  disease

@@ -14,14 +14,14 @@ Implementation of project components outside of Kaggle notebook:
     and the number of input and output tokens to the llm for summarization and evaluation,
     exceptions, user feedback, and basic session stats.
     DONE
-    agent/src/setup_logging.py 
-    agent/test/test_logging.py
+    clinical_trials_asst/src/setup_logging.py
+    clinical_trials_asst/test/test_logging.py
     logged to bin/data/...
 (2) session id
     provide a uniq session id w/ high probability
     DONE
-    agent/src/session_id.py
-    agent/test/test_session_id.py
+    clinical_trials_asst/src/session_id.py
+    clinical_trials_asst/test/test_session_id.py
 (3) prompt
     provide prompts to the LLMs:
        text summarization: instructions to an LLM for text readability.
@@ -36,55 +36,56 @@ Implementation of project components outside of Kaggle notebook:
     methods.  one can input data files, but not the sub-directory structure 
     which would be useful for demonstration of asset prompt mixing while experimenting
     with models, but not needed in the notebook
-    agent/resources
-    agent/test/test_prompts.py
+    clinical_trials_asst/resources
+    clinical_trials_asst/test/test_prompts.py
     DONE 
 (4) code for an LLM to check whether it recognizes a disease name
     DONE
-    agent/test/test_langgraph_notebook.py
+    clinical_trials_asst/test/test_langgraph_notebook.py
 (5) clinical trial request function, parser, and filter:
     makes API request for published completed published trial for disease
     with additional properties of treatement or prevention.
     parses the json response and keeps the title and citation information.
     DONE
-    agent/src/HttpsRequester.py
-    agent/src/trials.py
-    agent/test/test_trials.py
+    clinical_trials_asst/src/HttpsRequester.py
+    clinical_trials_asst/src/trials.py
+    clinical_trials_asst/test/test_trials.py
 (6) publication request function, parser, and filter:
     makes API request for the abstract of the citation,
     parses and filters the xml response to return the abstract.
     DONE
-    agent/src/article.py
-    agent/test/test_article.py
+    clinical_trials_asst/src/article.py
+    clinical_trials_asst/test/test_article.py
 (8) code for LLM summization given prompt and article and presentation:
     the notebook code to use the LLM for text summarization
     and to present the results
     DONE
-    agent/src/notebook_genai.py
-    agent/test/test_notebook.py
-    agent/test/test_langgraph_notebook.py
+    clinical_trials_asst/src/notebook_genai.py
+    clinical_trials_asst/test/test_notebook.py
+    clinical_trials_asst/test/test_langgraph_notebook.py
 (9) code to use another LLM to evaluate the first response and rate it.
     DONE
-    agent/src/notebook_genai.py
-    agent/test/test_notebook.py
-    agent/test/test_langgraph_notebook.py
+    clinical_trials_asst/src/notebook_genai.py
+    clinical_trials_asst/test/test_notebook.py
+    clinical_trials_asst/test/test_langgraph_notebook.py
 (10) function for user feedback
     DONE
-    agent/src/notebook_genai.py
-    agent/test/test_notebook.py
-    agent/test/test_langgraph_notebook.py
+    clinical_trials_asst/src/notebook_genai.py
+    clinical_trials_asst/test/test_notebook.py
+    clinical_trials_asst/test/test_langgraph_notebook.py
 (11) code for evaluating the logs and feedback
     The data is in place for this, but a round of revising the system based
     upon the log data is not present in this project.  A cloud based
     logging is needed to collect and process the indiv Kaggle session logs.
     Each Kaggle notebook session is its own Docker image instance 
     and so the logs aren't aggregated within Kaggle infrastructure.
-(12) paste the tested code into the Kaggle notebook 
-     documenting the pieces and goals  (see bottom of this file)
+(12) paste the tested code into the Kaggle notebook .
+    DONE
+    dist/clinical-trials-asst.ipynb
 
 A rough sketch of the UML sequence diagram:
 
-Main Agent cell as UML Sequence diagram (column timelines are implied):
+Agent calls as UML Sequence diagram (column timelines are implied):
 
 User     Agent    Functions          LLM         Support  Logs LLM2
      ->  disease
@@ -99,7 +100,7 @@ User     Agent    Functions          LLM         Support  Logs LLM2
      ->  feedback -------------------------------------->
                   ------------------------------>
 
-Eval Agent cell:
+Eval Agent call:
      Functions    Logs    Feedback  LLM2_evals
        eval     ->   
                 --------->   
@@ -109,13 +110,17 @@ Eval Agent cell:
 
 Placement in notebook, web blog, and video:
 
-(1) importing from github, the content in agent/resources/*
+(1) importing from github, the content in clinical_trials_asst/resources/*
+    DONE
 (2) writing of the notebook goals, section documentation,
-(3) pasting code into sections
+    DONE
+(3) pasting code into sections, modify for environment and running automatically or interactively
+    DONE
 (4) run and save notebook
+    DONE
 (5) web blog: github has a wiki i/o option where this can live.
 (6) video:
-(7) add links  to notebook
+(7) add links to notebook
 (8) make public
 
 

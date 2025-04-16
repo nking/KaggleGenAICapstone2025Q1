@@ -5,8 +5,8 @@ deployment frameworks, infrastructures, security, logging, scalability.
 This notebook is a prototype that will use Kaggle resources and the tools 
 provided by the course.  
 
-If the goal were to build a scalable, low latency agent deployed to the
-cloud, one could instead use the Vertex AI tools (and even the 
+To build a scalable, low latency application deployed to the
+cloud, one could use the Vertex AI tools (and even the
 AgentBuilder) also presented in the course ($1000 credit for using the
 AgentBuilder is currently offered!).
 
@@ -128,7 +128,7 @@ Prompts:
 ---------
 the model prompt should be present in version control.
 version control branches will be used to help provide ability to mix 
-different agent component versions to produce a new total system.
+different application component versions to produce a new total system.
 
 the tests are integration tests that the LLM response is well formed,
 correct, a combination of serious and friendly, somewhat succint.
@@ -137,7 +137,7 @@ prompts should be compared to instructions for resulting summaries
 if have time to implement (optional).
 
 evaluations:
-   - human feedback can be used to asses quality of summary, given queries
+   - human feedback can be used to assess quality of summary, given queries
    - another agent should be used to rate the results.
 
 monitor:
