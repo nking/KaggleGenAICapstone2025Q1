@@ -73,7 +73,8 @@ LLMs:
 Gemini-1.5-flash
     Strengths:
         SOTA, Handles long context well, Ability to fine-tune, context 
-        caching
+        caching, ability to follow complex instructions and complete
+        complex tasks.
     Weaknesses: 
         No grounding w/ google search
     Costs:
@@ -89,11 +90,13 @@ Gemini-1.5-flash
 
 Gemma gemma-3-27b-it (text only)  
     Strengths:
-        Lightweight, free 
+        Lightweight, free, compatible with many tuning toolchains.  can follow
+        instructions, but they must be part of the prompt rather than system
+        instructions.
     Weaknesses:
         context input window constraint of 128 k
         No grounding, possibly lower quality results than gemini-1.5-flash for 
-        this project's content
+        this project's content.
         No ability to find-tune
     Costs:
         Free pricing: 15 RPM, 1000000 TPM,   1500 RPD
