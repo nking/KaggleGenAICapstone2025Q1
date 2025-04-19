@@ -1,6 +1,7 @@
 import unittest
 import os
 import session_id
+import time
 
 class TestSessionId(unittest.TestCase):
   def test_script_execution(self):
@@ -18,6 +19,16 @@ class TestSessionId(unittest.TestCase):
       print(f"{flpath} not found\n")
     except ValueError:
       print(f"Error: Invalid content in {flpath}.\n")
+
+  def _read_stale_session_file(self, flpath: str):
+    s_id = session_id.get_session_id()
+    ts = time.time_ns() - 2*3600*1_000_000_000
+    _session_file = session_id.get_session_filepath()
+    _session_ts = _session_file + "_ts.txt"
+    with open(_session_ts, 'w') as outfile:
+      outfile.write(f'{ts}')
+    s_id_2 = session_id.get_session_id()
+    self.assertNotEqual(s_id, s_id2)
 
 if __name__ == '__main__':
   unittest.main()
