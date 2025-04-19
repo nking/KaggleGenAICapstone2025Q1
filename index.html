@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Clinical Trials Assistant by nking</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <meta name="keywords" content="software, gen AI agents" />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <meta name="description" content="summary of building a clinical trials assistant with generative AI agents for the Google Kaggle 5-day GENAI course 2025Q1" />
+
+    <script src="https://fred-wang.github.io/mathjax.js/mpadded-min.js"></script>
+
+  </head>
+  <body>
+    <section class="page-header">
+      <h2 class="project-name">Clinical Trials Assistant</h2>
+      <h1 class="project-tagline">KaggleGenAICapstone2025Q1</h1>
+      <a href="https://www.kaggle.com/code/nicholeasuniquename/clinical-trials-assistant/" class="btn">See in Kaggle Notebook</a>
+      <a href="https://github.com/nking/KaggleGenAICapstone2025Q1" class="btn">View on GitHub</a>
+    </section>
+
+    <section class="main-content">
+<p>The Clinical Trials Assistant is a multi-agent generative AI application
+whose goal is to help users find completed, published results of clinical
+trials for treatment or prevention of a disease that 
+the user is interested in.  Large Language Models (LLMs) are used in validating
+user input, summarizing complex text for people without a medical background, 
+and evaluating the summarizations.</p>
+
+This is my capstone project for the
+<a href="https://www.kaggle.com/competitions/gen-ai-intensive-course-capstone-2025q1/overview">Google Kaggle 5-day Generative AI Course.</a>
+The application demonstrates a few uses of LLMs in a pipeline to produce easy to understand
+summarizations of the trial results.  The Kaggle client application is 
+<u><a href="https://https://www.kaggle.com/code/nicholeasuniquename/clinical-trials-assistant/">here</a></u>.
+
+<p>This blog (1) introduces LLMs, (2) highlights some of the application's lifecycle, and (3) presents
+snapshots from the application.  References used in the blog are at the bottom of the article.</p>
+
+<a href="#lifecycle">skip to lifecycle</a>
+<br/>
+<a href="#app">skip to the application</a>
+<br/>
+
+<h3 id="LLMs">(1) LLMs</h3>
+LLMs are able to accomplish complex goals through abilities built upon
+the ability to predict the next word in a sequence of words.  
+Predicting the next word is a difficult task.
+The space of possible events for all combinations of words is far larger
+than the amount of data that could be given to a model, 
+so the problem of learning the probabilities of
+word combinations is severely under-determined.
+
+<br/>
+<br/>
+
+Note that in these algorithms "word" might be partial words or even byte-pairs.
+
+<br/>
+<br/>
+
+To predict the combination of words, we define the joint probability of the words.
+Let <math alttext="x=[x1, x2, ... xn]">
+<mrow><mi>x</mi><mo>=</mo><mo>[</mo>
+<msub> <mi>x</mi><mn>1</mn></msub> <mo separator="true">,</mo>
+<msub> <mi>x</mi><mn>2</mn></msub> <mo separator="true">,</mo>
+<mo>&hellip;</mo> <msub> <mi>x</mi><mn>n</mn></msub>
+<mo>]</mo>
+</mrow> </math>,
+then, by the chain rule of factorization, we have
+
+<math alttext="p(x) = p(x1) * p(x2|x1) * ... p(xn|xn-1, xn-2, ...x 1)">
+<mrow>
+<mi>p</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo>
+<mrow><mi>p</mi><mo>(</mo>
+  <msub><mi>x</mi><mn>1</mn></msub><mo>)</mo>
+</mrow>
+<mo>&middot;</mo>
+<mrow><mi>p</mi><mo>(</mo>
+  <msub><mi>x</mi><mn>2</mn></msub>
+  <mo>&vert;</mo>
+  <msub><mi>x</mi><mn>1</mn></msub> <mo>)</mo>
+</mrow>
+<mo>&middot;</mo>
+<mo>&hellip;</mo>
+<mrow>
+  <mi>p</mi><mo>(</mo>
+  <msub><mi>x</mi><mn>n</mn></msub>
+  <mo>&vert;</mo>
+  <msub><mi>x</mi><mn>n-1</mn></msub><mo separator="true">,</mo> 
+  <msub><mi>x</mi><mn>n-2</mn></msub><mo separator="true">,</mo> 
+  <mo>&hellip;</mo>
+  <msub><mi>x</mi><mn>1</mn></msub>
+  <mo>)</mo>
+</mrow>
+</mrow> </math>.
+Predicting the last word given the words preceding it, that is,
+<math alttext="p(xn|xn-1, xn-2, ...x 1)">
+<mrow>
+<mrow>
+  <mi>p</mi><mo>(</mo>
+  <msub><mi>x</mi><mn>n</mn></msub>
+  <mo>&vert;</mo>
+  <msub><mi>x</mi><mn>n-1</mn></msub><mo separator="true">,</mo>
+  <msub><mi>x</mi><mn>n-2</mn></msub><mo separator="true">,</mo>
+  <mo>&hellip;</mo>
+  <msub><mi>x</mi><mn>1</mn></msub>
+  <mo>)</mo>
+</mrow>
+</mrow> </math>
+has a complexity of 
+<math alttext="(|possible values x can be|^(n-1) - 1)">
+<mrow> 
+<mo>(</mo>
+<msup>
+<mi>(number of possible values x can be)</mi>
+<mi>n-1</mi>
+</msup>
+</msup> <mo>-</mo><mi>1</mi>
+<mo>)</mo>
+</mrow></math>)
+and so that calculation is not tractable.
+To make the problem tractable while still preserving the 
+autoregressive property of using the previous steps to predict
+the current step, many different algorithms have been made.
+<em>The transformer and uses of transformers in LLMs are the latest of these algorithms.</em>
+
+<br/>
+<br/>
+
+<details>
+  <summary>
+  <p>
+  <u>[view/hide]</u>
+  Details of Transformers and their components.
+  </p>
+  </summary>
+
+<p>Milestones in LLM components<p>
+<table>
+<th>Year</th><th>Constructs</th>
+<tr><td>2015</td><td>Attention<td></tr>
+<tr><td>2017</td><td>Transformer Architecture<td></tr>
+<tr><td>2018</td><td>Contextual Word Embeddings and Pretraining<td></tr>
+<tr><td>2019</td><td>Prompting<td></tr>
+</table>
+</p>
+
+<p>LLMs learn the probabilities of sequences of words
+by training on a very large corpus of words to predict the next word.
+They're built from transformers which are generative models that
+include autoregressive properties with non-linear weights.  
+The transformer was created by Google in 2017.
+Their network architecture was less complex than the state-of-the-art (SOTA) RNN and CNN models,
+was parallelizable, required less training time, and demonstrated 
+higher quality results on language translations.</p>
+
+<br/>
+
+Briefly, definitions of a few constructs:
+
+<br/>
+
+
+<p><em>Vector embeddings</em></p> are ways to represent data in a compact, binned (grouped)
+manner.  For instance, if a language had a million words, 
+a vector would be 1 million elements in length if each word was an element. Tthe
+vector would have 1 million indices.
+Words can be grouped by meanings or some unknown aspects to make far fewer than a million indices.
+Efficient embeddings may have latent groupings that are not easy to interpret,
+and they may share the same embedded vector space with objects of different
+types (modalities, e.g. image and text and audio embeddings sharing the same vector embedding space).
+<p><em>Distances</em></p> as differences or similarities between embeddings are part
+of what is needed to calculate model losses efficiently.  Losses (and K-L divergences) are
+needed to train Neural Network (NN) models.
+There are
+<ul>
+<li>embeddings that represent meaning, and
+</li>
+<li>embeddings that represent position within their context such as the position
+or words in a sentence or relative to another word.
+</li>
+</ul>
+
+<p><em>Attention from Embedding Distances</em></p>
+
+The transformer architecture was influenced by noticing that 
+"end-to-end" memory networks use a recurrent attention mechanism
+to perform well on simple question and answer tasks and language
+modeling tasks.
+Details of the "end-to-end" memory network help to understand the Transformer
+architecture.
+
+<br/>
+<br/>
+
+The "end-to-end" memory network is a query answer model.
+<code>
+
+<br/>
+{x_i} is the input set of data to be stored in memory.
+<br/>
+The set {x_i} is converted to embedded memory vectors {m_i} by
+embedding matrix A, and they have dimension d.
+<br/>
+A query q is converted to embedding u by an embedding matrix B.
+<br/>
+The probability of matching u to any m_i
+   is the softmax of their inner products:
+<br/>
+<math xmlns="http://www.w3.org/1998/Math/MathML"
+alttext="p_i = softmax(transpose(u)⋅m_i)">
+<mrow>
+<msub> <mi>p</mi> <mn>i</mn></msub>
+<mo>=</mo>
+<mo>softmax</mo>
+<mo>(</mo>
+<msup> <mi>u</mi> <mo>T</mo> </msup>
+<mo>⋅</mo>
+<msub> <mi>m</mi> <mn>i</mn> </msub>
+<mo>)</mo>
+</mrow>
+</math>
+
+where 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML"
+alttext="Softmax(z_i) = exp(z_i)/sum_{over j}(exp(z_j))">
+<mrow>
+<mo>softmax</mo>
+<mo>(</mo>
+<msub> <mi>z</mi><mn>i</mn></msub>
+<mo>)</mo>
+<mo>=</mo>
+    <msup><mi>e</mi> 
+      <msub> <mi>z</mi><mn>i</mn></msub>
+    </msup>
+<mo>/</mo>
+    <msub> <mo>&sum;</mo><mn>j</mn></msub>
+    <mo>(</mo>
+      <msup><mi>e</mi> <msub> <mi>z</mi><mn>j</mn></msub> </msup>
+    <mo>)</mo>
+</mrow>
+</math>
+
+<br/>
+
+x_i is converted to the output embedding vector c_i by embedding
+matrix C.
+<br/>
+Then the response vector from memory o is
+
+<math xmlns="http://www.w3.org/1998/Math/MathML"
+alttext="o = sum_{over i}(p_i * c_i)">
+<mrow>
+<mi>o</mi>
+<mo>=</mo>
+<msub> <mo>&sum;</mo><mn>i</mn></msub>
+<mo>(</mo>
+  <msub> <mi>p</mi><mn>i</mn></msub> 
+<mo>&middot;</mo>
+  <msub> <mi>c</mi><mn>i</mn></msub> 
+<mo>)</mo>
+</mrow>
+</math>
+
+The function is smooth, enabling gradients and back-propagation.
+So far, this is not so different from a "Two-Tower" DNN model construction
+before defining the number of layers.
+</code>
+
+<br/>
+<br/>
+
+The single layer "end-to-end" has final prediction:
+<code>
+  a_est = softmax(W(o+u))
+    where W is a final weight matrix.
+
+    All 3 embedding matrices A, B, and C as well as W are jointly learned
+    during training by minimizing a standard cross-entropy loss between
+    a_est and the true label a.</p>
+</code>
+
+<br/>
+The multiple layer "end-to-end" with K layers gives the input query embedding
+to the first layer, and thereafter, the output of each layer is given as
+input to the next layer.
+<code>
+   u of (layer k+1) = u of (layer k) + o of (layer k)
+   <br/>
+   each layer k has its own embedding matrices A of layer k, C of layer k though they are
+   constrained to keep number of parameters small.
+ The final prediction is:
+   a_est = Softmax(W * u of (layer k+1)) = Softmax(W * (o of (layer k) + u of (layer k)).
+The end-to-end memory network authors found that some layers concentrate
+only on nearby words while other layers have broad attention over all
+memory locations.
+</code>
+
+<p>The Transformer continues with far more positional attention in its 
+architecture.</p>
+
+<u>The transformer architecture</u>
+<p> There is an encoder and a decoder. </p> 
+The encoder maps
+the input representation sequence
+<math alttext="{x_1, x_2, ...x_n}"> 
+<mrow><mo>{</mo>
+<msub> <mi>x</mi><mn>1</mn></msub> <mo separator="true">,</mo>
+<msub> <mi>x</mi><mn>2</mn></msub> <mo separator="true">,</mo>
+<mo>&hellip;</mo> <msub> <mi>x</mi><mn>n</mn></msub>
+<mo>}</mo>
+</mrow> </math>
+to a sequence of 
+<math alttext="{z_1, z_2, ...z_n}"> 
+<mrow><mo>{</mo>
+<msub> <mi>z</mi><mn>1</mn></msub> <mo separator="true">,</mo>
+<msub> <mi>z</mi><mn>2</mn></msub> <mo separator="true">,</mo>
+<mo>&hellip;</mo> <msub> <mi>z</mi><mn>n</mn></msub>
+<mo>}</mo>
+</mrow> </math>
+which are continuous representations.
+The z are inputs to the decoder which generates symbols 
+<math alttext="{y_1, y_2, ...y_m}"> 
+<mrow><mo>{</mo>
+<msub> <mi>y</mi><mn>1</mn></msub> <mo separator="true">,</mo>
+<msub> <mi>y</mi><mn>2</mn></msub> <mo separator="true">,</mo>
+<mo>&hellip;</mo> <msub> <mi>y</mi><mn>m</mn></msub>
+<mo>}</mo>
+</mrow> </math>
+one at a time.
+
+<p>Encoder:</p> 
+The encoder is composed of a stack of
+  N = 6 identical layers.
+  Each layer has two sub-layers.
+    The first sub-layer is a multi-head self-attention mechanism
+    The second sub-layer is a simple, position-wise fully connected feed-forward network.
+  The output of each sub-layer is LayerNorm(x + Sublayer(x)) where Sublayer(x)
+  is the function implemented by that specific sub-layer and LayerNorm is a
+  normalization function.
+  The output dimension is the same size for all embedding layers and sub-layers.
+
+<p> Decoder:</p> 
+The decoder is composed of a stack of
+  N = 6 identical layers.
+  The same 2 sub-layers of the encoder.
+  A third sub-layer performs multi-head attention over the
+  output of the encoder stack.
+  The output of each sub-layer is LayerNorm(x + Sublayer(x)) where Sublayer(x).
+  Masking: the self-attention sub-layer is modified to prevent
+  use of subsequent positions (attention is paid to past positions only).
+  Like the end-to-end memory model, the output embeddings are all offset by
+  1 position from one another, so combined with masking, produces predictions
+  for i that depend upon known inputs from positions less than i.
+
+<p> Attention:</p>  
+query, keys, and values are embedding vectors.
+The attention function maps a query and set of key-value pairs to an output.
+The output is a weighted sum of the values.
+The weight for each value is calculated by compatability of query with key.
+
+<p>Scaled Dot-Product Attention:</p>
+  The query and key embeddings have dimension 
+<math alttext="d_k"> <mrow><msub> <mi>d</mi><mn>k</mn></msub></mrow> </math>
+ The value embeddings have dimension 
+<math alttext="d_v"> <mrow><msub> <mi>d</mi><mn>v</mn></msub></mrow> </math>
+
+For a given q
+<math xmlns="http://www.w3.org/1998/Math/MathML"
+alttext="attention = sum_{over i}( softmax(q * k_i / sqrt(d_k)) * v_{k_i} )">
+<mrow>
+<mi>attention</mi>
+<mo>=</mo>
+<msub> <mo>&sum;</mo><mn>i</mn></msub>
+  <mo>(</mo>
+  <mo>softmax</mo><mo>(</mo><mi>q</mi><mo>&middot;</mo>
+  <msub> <mi>k</mi><mn>i</mn></msub> <mo>&divide;</mo>
+  <mo>sqrt</mo> <mo>(</mo> <msub> <mi>d</mi><mn>k</mn></msub> <mo>)</mo>
+  <mo>)</mo>
+  <mo>&middot;</mo>
+  <msub> 
+    <mi>v</mi>
+    <msub>
+      <mi>k</mi><mn>i</mn>
+    </msub>
+  </msub> 
+<mo>)</mo>
+</mrow>
+</math>
+In matrix form
+<math xmlns="http://www.w3.org/1998/Math/MathML"
+alttext="attention = softmax(Q*K^T/sqrt(d_k)) * V">
+<mrow>
+<mi>attention</mi>
+<mo>=</mo>
+<mo>softmax</mo><mo>(</mo><mi>Q</mi><mo>&middot;</mo>
+  <mo>transpose</mo><mo>(</mo><mi>K</mi><mo>)</mo>
+  <mo>&divide;</mo><mo>sqrt</mo><mo>(</mo><msub> <mi>d</mi><mn>k</mn> </msub>
+  <mo>)</mo> <mo>)</mo> <mo>&middot;</mo> <mi>V</mi>
+
+
+<p> Multi-Head Attention:</p> 
+replaces the single attention function in the 3rd sub-layer by this algorithm.
+For h number of times, perform the following:
+a linear projection of the queries, keys and values to
+learned projections having dimensions 
+<math alttext="d_k"> <mrow><msub> <mi>d</mi><mn>k</mn></msub></mrow> </math>,
+<math alttext="d_k"> <mrow><msub> <mi>d</mi><mn>k</mn></msub></mrow> </math>,
+and <math alttext="d_v"> <mrow><msub> <mi>d</mi><mn>v</mn></msub></mrow> </math>, respectively.
+One can perform the attention function for each q, k, v in parallel.
+The outputs are each of dimension 
+<math alttext="d_v"> <mrow><msub> <mi>d</mi><mn>v</mn></msub></mrow> </math>.
+
+These h output values are concatenated and then projected.
+<math alttext="MultiHead(Q, K, V ) = Concat(head1, ..., headh)*W^O"> 
+<mrow>
+<mi>MultiHead</mi><mo>(</mo><mi>Q</mi><mo separator="true">,</mo>
+<mi>K</mi><mo separator="true">,</mo> <mi>V</mi> <mo>)</mo>
+<mo>=</mo>
+<mi>Concat</mi><mo>(</mo>
+<msub> <mi>head</mi><mn>1</mn></msub><mo separator="true">,</mo> <mo>&hellip;</mo> <msub> <mi>head</mi><mn>h</mn></msub>
+<mo>)</mo>
+<mo>&middot;</mo>
+<msup> <mi>W</mi><mn>Q</mn></msup>
+</mrow> </math>
+
+<br/>
+where
+<math alttext="headi = Attention(Q*Wi^Q, K*Wi^K, V*Wi^V)"> 
+<mrow>
+<msub><mi>head</mi><mn>i</mn></msub>
+<mo>=</mo>
+<mi>Attention</mi><mo>(</mo>
+<mi>Q</mi><mo>&middot;</mo>
+<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>Q</mi> </msup>
+<mo separator="true">,</mo>
+<mi>K</mi><mo>&middot;</mo>
+<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>K</mi> </msup>
+<mo separator="true">,</mo>
+<mi>V</mi><mo>&middot;</mo>
+<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>V</mi> </msup>
+<mo>)</mo>
+</mrow></math>
+
+The projections are parameter matrices
+<br/>
+<math alttext="Wi^Q ∈ R^(d_model × d_k)"> <mrow>
+<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>Q</mi> </msup>
+<mo>&isinv;</mo>
+<msup> <mi>&Ropf;</mi> <mrow> <msub><mi>d</mi><mn>model</mn></msub> 
+    <mo>&times;</mo> <msub><mi>d</mi><mn>k</mn></msub> </mrow> </msup>
+</mrow></math>
+  
+<br/>
+<math alttext="Wi^K ∈ R^(d_model × d_k)"> <mrow>
+<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>K</mi> </msup>
+<mo>&isinv;</mo>
+<msup> <mi>&Ropf;</mi> <mrow> <msub><mi>d</mi><mn>model</mn></msub> 
+    <mo>&times;</mo> <msub><mi>d</mi><mn>k</mn></msub> </mrow> </msup>
+</mrow></math>
+
+<br/>
+<math alttext="Wi^V ∈ R^(d_model × d_k)"> <mrow>
+<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>V</mi> </msup>
+<mo>&isinv;</mo>
+<msup> <mi>&Ropf;</mi> <mrow> <msub><mi>d</mi><mn>model</mn></msub> 
+    <mo>&times;</mo> <msub><mi>d</mi><mn>k</mn></msub> </mrow> </msup>
+</mrow></math>
+
+<br/>
+and 
+<br/>
+<math alttext="Wi^O ∈ R^(d_model × d_k)"><mrow> 
+<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>O</mi> </msup>
+<mo>&isinv;</mo>
+<msup> <mi>&Ropf;</mi> <mrow> <msub><mi>d</mi><mn>model</mn></msub> 
+    <mo>&times;</mo> <msub><mi>d</mi><mn>k</mn></msub> </mrow> </msup>
+</mrow></math>
+
+<br/>
+   In the paper they use h=8 parallel attention layers (a.k.a. heads), and
+<math alttext="d_k = d_v = d_model/h = 64"> 
+<mrow><msub> <mi>d</mi><mn>k</mn></msub>
+<mo>=</mo>
+<mrow><msub> <mi>d</mi><mn>v</mn></msub>
+<mo>=</mo>
+<mrow><msub> <mi>d</mi><mn>model</mn></msub><mo>&divide;</mo><mi>h</mi> 
+</mrow> </math>
+<mo>=</mo><mn>64</mn>.
+
+Because of the reduced dimension of each 
+parallel attention layer, the total computational cost is similar to
+single-layer attention with full dimensionality.
+
+The original transformer's use of Multi-head Attention:
+<p>(A) in "encoder-decoder" attention layers:</p>
+    &#9735; Every position in the decoder attends over all positions in input sequence. (mimics sequence-to-sequence models)
+<br/>
+    query (q): previous decoder layer output
+<br/>
+    key   (k): encoder output
+<br/>
+    value (v): encoder output
+<br/>
+<p>(B) in encoder self-attention layers:</p>
+    self-attention means query, keys and values are all from same place which
+    is the output of the previous layer in the encoder..
+    <br/>
+    &#9735; Each position in the encoder can attend to all positions in the previous
+    layer of the encoder.
+<br/>
+    query (q): previous encoder layer output
+<br/>
+    key   (k): same as q and v, they are output of encoder's previous layer
+<br/>
+    value (v): same as q and k
+<br/>
+<p>(C) in decoder self-attention layers:</p>
+    self-attention means query, keys and values are all from same place which
+    is the output of the previous layer in the decoder..
+    to preserve auto-regressive property, leftward information flow is
+    prevented by masking out (set to − &infin;) all values in the input of
+    the softmax that are illegal connections.
+    <br/>
+    &#9735; Each position in decoder attends to all positions in the
+       decoder's previous layer.
+<br/>
+<br/>
+Each layer in the network encoder and decoder also has a fully connected
+feed-forward network applied to each position separately and identically
+to provide non-linearity.
+<math alttext="FFN(x) = max(0, x*W1 + b1)*W2 + b2"> 
+<mrow><mo>FFN</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mo>max</mo><mo>(</mo>
+<mi>0</mi><mo separator="true">,</mo>
+<mi>x</mi><mo>&middot;</mo><mi>W1</mi><mo>&plus;</mo><mi>b1</mi><mo>)</mo>
+<mo>&middot;</mo><mi>W2</mi><mo>&plus;</mo><mi>b2</mi>
+</mrow> </math>
+<br/>
+Positional encodings of dimension 
+<math alttext="d_model"> <mrow><msub> <mi>d</mi><mn>model</mn></msub></mrow> </math>,
+are made and put at bottom
+of encoder and decoder stacks.  each position pos and dimension i
+is represented in the positional encoding 2*i+1 a sine function and
+the adjacent dimension (2*i+1) by a cosine function.
+</details>
+
+<p> Characteristics that Vaswanis et al improved with their Transformer architecture:</p>
+<ol>
+ <li> reduced the total computational complexity per model layer
+ </li>
+ <li> increased the amount of computation that can be parallelized, as measured by the
+   minimum number of sequential operations required
+ </li>
+ <li> 
+   increased the context length, that is, the path length between long-range dependencies 
+   in the network, measured by
+   the maximum path lengths between any 2 input and output positions.
+ </li>
+</ol>
+
+<h3 id="lifecycle">(2) LifeCycle</h3>
+The first steps are defining the goal of the project, finding a stable, robust source of data for it,
+and building the smallest working version of pieces to explore the feasibility of it.
+With a confirmed feasible goal, one can then further define the application.
+B.T.W. the contest requirement was to use generative AI as a uniquely valuable tool in an application
+which would otherwise be less capable of accomplishing its real world goals.
+For this I created a clinical trials assistant from multiple gen-AI agents.
+
+First results from hand picked articles which had complex medical terms showed that
+text summarization by the Gemini-2-*, Gemini-1-* and Gamma-3-* models gave very good 
+results that did not require a medical background to understand.
+The prompts I used were simple and instructive zero-shot prompts.   I used deterministice
+generative settings (temperature=0) with all agents.
+Neither model fine-tuning, nor parameter efficient tuning were deemed to be
+necessary for this prototype.
+
+<br/>
+<br/>
+Standard software requirements, analysis, design and implementation were followed
+with additional elements added for generative AI architecture.
+
+<br/>
+<br/>
+
+<details id="lifecycle_top">
+  <summary>
+  <p>
+  <u>[view/hide]</u>
+  Details of the gen AI lifecycle here 
+  (also in 
+  <a href="https://github.com/nking/KaggleGenAICapstone2025Q1/tree/main/docs/lifecycle">docs/lifecycle</a> in the github repository)
+  <br/>
+  </p>
+  </summary>
+
+<ol>
+<li>Requirements (functional and non-functional):</li>
+  <ul>
+    <li>Capstone capabilities: At least 3 of the get AI capstone capabilities must be included. </li>
+    <li>Agents: text capable LLMs.  All need to be able to reason, one needs to be able
+        to perform document summarization, one (preferably a differnt model than the summarizer,
+        needs to be able to evaluation the summarization, and one needs to be able to
+        recognize valid disease names.
+    </li>
+    <li>Data: robust, stable API sources </li>
+    <li>Deployment/Serving/Client:</li>
+      <ul>
+        <li>Cloud hosted LLMs supplied by Google.
+        <li>Stubs for cloud based logging.
+      </ul>
+      <ul>
+        <li>
+        The code must run from start to finish within a Kaggle notebook.
+        The assistant must be an interactive application, and so it needs to optionally
+        run automatically too.
+        </li>
+        <li>Consideration for ease of porting to mobile environments is kept in mind.</li>
+      </ul>
+    <li>Prompts</li>
+    <ul>
+      <li>Zero-shot instructions for all tasks</li>
+    </ul>
+    <li>Logging, Monitoring: </li>
+    <ul>
+      <li>latencies for all API and LLM invocations</li>
+      <li>size of data: number of input and output tokens</li>
+      <li>drift of data: watching for APIs returning data different than expected
+      <li>errors</li>
+      <li>user feedback</li>
+    </ul>
+    <li>Protect User from harmful content </li>
+    <li>Ensure regulations for privacy and other guidelines are followed </li>
+    <li>Latencies: Each response to the user should be less than 3 seconds ideally.  </li>
+    <li>QPS:</li>
+      <ul>
+         <li>Rate limiting for API requests.  The requests are directly from the client
+             Kaggle notebooks to the APIs.  
+             Rate limiting on client-side should be made. 
+             Model choices that handle scale well for the budget should be made.
+         </li>
+     </ul>
+  </ul>
+<li>Analysis and Design</li>
+  <ul>
+    <li>Data I/O assessment</li>
+    <ul>
+      <li>data to and from the NIH APIs is small </li>
+      <li>data to and from the Google LLM APIs is small </li>
+    </ul>
+    <li>Choice of LLMs w/ preference for smaller models, no need for image or audio in this prototype</li>
+    <ul>
+      <li>Gemini-1.5-flash and smaller models:
+         SOTA, handles long context well, ability to follow complex instructions 
+         and complete complex tasks,  document understanding,
+         can take system instructions specifically,
+         can output results in a structured format, can scale well,
+         use is free up to rate and data limits, then increases.
+      </li>
+      <li>Gamma
+         context window constraint of 128 k, ability to follow complex instructions 
+         and complete complex tasks.  document understanding.
+         it's an open source model that performs very well, though has fewer 
+         abilities than the Gemini models.  The costs for rates and data sizes
+         are free, but the model might have scale limits. 
+      </li>
+    </ul>
+    <li>Function Calling: client side methods to build and test</li> 
+    <ul>
+      <li>query to user for disease name w/ option to exit</li>
+        <ul><li>Google LLM agent to validate the disease name</li></ul>
+      <li>retrieve clinical trials
+        <ul><li>API request to clinicaltrials.gov, parsing, logging</li></ul>
+      <li>query to user for trial selection w/ option to exit</li>
+      <li>query to user for citation selection w/ option to exit</li>
+        <ul><li>API request to NIHML's PubMed, parsing, logging</li></ul>
+      <li>article results summarization</li>
+        <ul><li>Google LLM agent to summarize text</li>
+        <li>Google LLM agent to evaluate summarization</li>
+        <li>parsing, logging</li></ul>
+    </ul>
+    <li>Gen AI orchestration layer: langgraph</li> 
+    <li>Integrity of data: best practices are followed in using APIs.  The APIs themselves
+        and Kaggle follow secure practices.</li>
+    <li>Integrity of logs: Kaggle environment is session based.  cloud logging stubs are
+        made but not implemented so no concerns there.</li>
+    <li>Protection of User from Harmful content</li>
+        <ul>
+          <li>User Feedback is requested and logged.  Additionally, the Kaggle notebooks
+              have a messaging environment where users can ask questions or leave
+              comments.
+          </li>
+        </ul>
+    <li>Regulations:  GDPR CCPA, and other guidelines are implicitly followed because no
+        PII is requested nor stored.</li>
+    <li>Prompts</li>
+    <ul>
+      <li>Versions: prompts are stored in language and version directories to allow mixing
+        of components while experimenting with improvements for the application.</li>
+    </ul>
+    <li>Logging, Monitoring</li> 
+    <ul><li>implemented in client locally w/ stubs for remote aggregation in the cloud</li></ul>
+    <li>Source version control in github</li> 
+    <li>Development tools were the Kaggle notebook and the JetBrains Pycharm IDE</li> 
+  </ul>
+  <li>Implementation (see The Gen AI Application below)</li>
+</ol>
+</details>
+
+<h3 id="app">The Gen AI Application</h3>
+
+The application is hosted in a Kaggle notebook <a href="https://www.kaggle.com/code/nicholeasuniquename/clinical-trials-assistant/">here</a>.
+
+Langraph was used for orchestration of the function calls by client-side
+invocations.  A sequential planner pattern with conditional cycles was 
+used for the workflow.
+
+Nodes were created for each function, and conditional edges from each
+node to the next in the sequence or to exit the application by user
+request.
+
+<ol>
+  <li>node: user_input_disease</li>
+  <ul> 
+    <li>next node: fetch_trials</li>
+    <li>conditional edge</li>
+  </ul> 
+  <li>node: fetch_trials</li>
+  <ul> 
+    <li>next node: user_choose_trial_number</li>
+    <li>conditional edge</li>
+  </ul> 
+  <li>node: user_choose_trial_number</li>
+  <ul> 
+    <li>next node: user_choose_citation_number</li>
+    <li>conditional edge</li>
+  </ul> 
+  <li>node: user_choose_citation_number</li>
+  <ul> 
+    <li>next node: fetch_abstract</li>
+    <li>conditional edge</li>
+  </ul> 
+  <li>node: fetch_abstract</li>
+  <ul> 
+    <li>next node: llm_summarization</li>
+    <li>conditional edge</li>
+  </ul> 
+  <li>node: llm_summarization</li>
+  <ul> 
+    <li>conditional edge</li>
+  </ul> 
+  <li>node: feedback_query</li>
+  <ul> 
+    <li>next node: user_input_disease</li>
+    <li>conditional edge</li>
+  </ul> 
+</ol>
+
+When the application starts, the user is presented with
+a welcome message and then a query for the disease name.
+
+<br/>
+<br/>
+<code>
+[to user]<br/>
+"This librarian searches clinical trials for completed, published results and summarizes the results for you."
+"Please enter a disease to search for (q to quit at any time):"
+</code>
+
+<br/>
+<br/>
+The disease name checker is an instance of ChatGoogleGenerativeAI with a chosen
+LLM and a deterministic temperature of 0.
+The disease name checker is given this prompt with the disease name and returns a
+response which includes meta data such as the number of input and output tokens:
+
+<br/>
+<br/>
+<code>
+[to LLM agent]<br/>
+"You are a librarian at the National Institutes of Health.
+Do you recognize the words {disease_name} as a valid disease name?
+Answer yes or no."
+</code>
+
+<br/>
+<br/>
+The trials are retrieved from the US National Library of Medicine's Clinical Trials 
+database and presented to the user.
+<br/>
+The user selects a trial and published trial result citations are then presented to them.
+The user selects a result from the list and the summary of that
+result is retrieved from the US National Library of Medicine's PubMed database.
+
+A prompt with text summarization instructions is given to the document summary agent 
+which has been configured for a deterministic response.
+<br/>
+<br/>
+<code>
+[to LLM agent]<br/>
+"Summarize this text in simple terms in a serious tone."
+</code>
+
+<br/>
+<br/>
+The agent response is presented to the user.
+
+The agent response is asynchronously evaluated by another agent which is given
+a somewhat lengthy 
+<a href="https://github.com/nking/KaggleGenAICapstone2025Q1/blob/main/clinical_trials_asst/resources/text/en/V1.0/eval_instruction.txt">prompt of instructions</a>.
+and the response  evaluation is logged.
+
+The user is asked if they would like to submit feedback and if so, they
+are presented with a couple of questions with itemized choices.  Their
+responses are logged.
+
+Lastly, the user is asked if they would like to make another query.
+
+<br/>
+<br/>
+And that is the prototype.  Thanks to Google for sponsoring this 5-day intensive
+course on Generative AI and providing great examples and resources for us to use!
+<br/>
+
+<h3 id="refs">References</h3>
+<ul>
+  <li>
+      <a href="https://github.com/nking/KaggleGenAICapstone2025Q1">Kaggle GenAI Capstone Announcement 2025Q1</a>
+  </li>
+  <li> Foundational Large Language Models and Text Generation
+      (<a href="https://drive.google.com/file/d/1rYu-mIcsTrAeCuH-xHPofrI1i1qNVzqO/view?usp=drive_link">Barektain et al. 2025</a>)
+  </li>
+  <li> Attention is All You Need
+      (<a href="https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf">Vaswani et al. NIPS 2017</a>)
+  </li>
+  <li>End-To-End Memory Network (
+     <a href="https://paperswithcode.com/paper/end-to-end-memory-networks">Sukhbaatar et al. NeurIPS 2015</a>)
+  </li>
+  <li>Stanford CS 236 (
+<a href="https://deepgenerativemodels.github.io/notes/index.html">Videos</a>,
+<a href="https://deepgenerativemodels.github.io/notes/index.html">Notes</a>)
+  </li>
+  <li><a href="https://web.stanford.edu/class/cs124/lec/LLM2024.pdf">Introduction to Large Language Models</a>
+  </li>
+  <li><a href="https://www.langchain.com/langgraph">LangGraph</a>
+</ul>
+
+</section>
+
+  
+  </body>
+</html>
