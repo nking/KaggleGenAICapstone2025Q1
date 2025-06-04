@@ -168,15 +168,18 @@ Briefly, definitions of a few constructs:
 
 <p><em>Vector embeddings</em></p> are ways to represent data in a compact, binned (grouped)
 manner.  For instance, if a language had a million words, 
-a vector would be 1 million elements in length if each word was an element. Tthe
+a vector would be 1 million elements in length if each word was an element. The
 vector would have 1 million indices.
 Words can be grouped by meanings or some unknown aspects to make far fewer than a million indices.
 Efficient embeddings may have latent groupings that are not easy to interpret,
 and they may share the same embedded vector space with objects of different
 types (modalities, e.g. image and text and audio embeddings sharing the same vector embedding space).
 <p><em>Distances</em></p> as differences or similarities between embeddings are part
-of what is needed to calculate model losses efficiently.  Losses (and K-L divergences) are
-needed to train Neural Network (NN) models.
+of what is needed to calculate model objectives efficiently.  
+Objectives such as minimizing cross-entropy losses, use of
+K-L divergence, Jenson-Shannon divergence, constrastive learning, etc.
+can be used in training Neural Network (NN) models.
+(TODO: follow-up on training multimodal embeddings.)
 There are
 <ul>
 <li>embeddings that represent meaning, and
@@ -716,8 +719,9 @@ with additional elements added for generative AI architecture.
 
 The application is hosted in a Kaggle notebook <a href="https://www.kaggle.com/code/nicholeasuniquename/clinical-trials-assistant/">here</a>.
 
-Langraph was used for orchestration of the function calls by client-side
-invocations.  A sequential planner pattern with conditional cycles was 
+Langraph was used for orchestration of the function calls (a.k.a. tools)
+by client-side invocations (client-side rather than LLM invocations to 
+reduce token use).  A sequential planner pattern with conditional cycles was 
 used for the workflow.
 
 Nodes were created for each function, and conditional edges from each
@@ -830,7 +834,7 @@ course on Generative AI and providing great examples and resources for us to use
 <h3 id="refs">References</h3>
 <ul>
   <li>
-     <a href="https://kaggle.com/competitions/gen-ai-intensive-course-capstone-2025q1">Gen AI Intensive Course Capstone 2025Q1</a>, Howard et al. 2005, Kaggle
+     <a href="https://kaggle.com/competitions/gen-ai-intensive-course-capstone-2025q1">Gen AI Intensive Course Capstone 2025Q1</a>, Howard et al. 2025, Kaggle
 
   </li>
   <li> Foundational Large Language Models and Text Generation
