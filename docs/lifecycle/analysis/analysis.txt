@@ -70,6 +70,10 @@ evaluations.
 LLMs:
 ----
 
+RPM is requests/min
+TPM is tokens/min
+RPD is requests/day
+
 Gemini-1.5-flash
     Strengths:
         SOTA, Handles long context well, Ability to fine-tune, context 
