@@ -52,6 +52,8 @@ the ability to predict the next word in a sequence of words.
 Predicting the next word is a difficult task.
 The space of possible events for all combinations of words is far larger
 than the amount of data that could be given to a model, 
+also, the model itself has far fewer parameters than that space for all
+possible events,
 so the problem of learning the probabilities of
 word combinations is severely under-determined.
 
@@ -63,19 +65,21 @@ Note that in these algorithms "word" might be partial words or even byte-pairs.
 <br/>
 <br/>
 
-To predict the combination of words, we define the joint probability and marginal of the words.
-Let <math alttext="x=[x1, x2, ... xn]">
+To predict the combination of words, we define the joint and 
+for some tasks, the marginal probabilities of the words.
+Let 
+<math alttext="x=[x1, x2, ... xn]">
 <mrow><mi>x</mi><mo>=</mo><mo>[</mo>
 <msub> <mi>x</mi><mn>1</mn></msub> <mo separator="true">,</mo>
 <msub> <mi>x</mi><mn>2</mn></msub> <mo separator="true">,</mo>
 <mo>&hellip;</mo> <msub> <mi>x</mi><mn>n</mn></msub>
 <mo>]</mo>
 </mrow> </math>,
-then, by the chain rule of factorization, we have
+then, by the chain rule of factorization, we have the joint probability
 
-<math alttext="p(x) = p(x1) * p(x2|x1) * ... p(xn|xn-1, xn-2, ...x 1)">
+<math alttext="p(joint on x) = p(x1) * p(x2|x1) * ... p(xn|xn-1, xn-2, ...x 1)">
 <mrow>
-<mi>p</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo>
+<mi>p</mi><mo>(</mo><mi>sequence x</mi><mo>)</mo><mo>=</mo>
 <mrow><mi>p</mi><mo>(</mo>
   <msub><mi>x</mi><mn>1</mn></msub><mo>)</mo>
 </mrow>
@@ -130,25 +134,6 @@ the current step, many different algorithms have been made.
 <em>The transformer and uses of transformers in LLMs are the latest of these algorithms.</em>
 
 <br/>
-<br/>
-
-<details>
-  <summary>
-  <p>
-  <u>[view/hide]</u>
-  Details of Transformers and their components.
-  </p>
-  </summary>
-
-<p>Milestones in LLM components<p>
-<table>
-<th>Year</th><th>Constructs</th>
-<tr><td>2015</td><td>Attention<td></tr>
-<tr><td>2017</td><td>Transformer Architecture<td></tr>
-<tr><td>2018</td><td>Contextual Word Embeddings and Pretraining<td></tr>
-<tr><td>2019</td><td>Prompting<td></tr>
-</table>
-</p>
 
 <p>LLMs learn the probabilities of sequences of words
 by training on a very large corpus of words to predict the next word.
@@ -159,159 +144,61 @@ Their network architecture was less complex than the state-of-the-art (SOTA) RNN
 was parallelizable, required less training time, and demonstrated 
 higher quality results on language translations.</p>
 
+<p>Milestones in LLM components<p>
+<table>
+<th>Year</th><th>Constructs</th>
+<tr><td>2015</td><td>Attention<td></tr>
+<tr><td>2017</td><td><b>Transformer Architecture</b></ld><td></tr>
+<tr><td>2018</td><td>Contextual Word Embeddings and Pretraining<td></tr>
+<tr><td>2019</td><td>Prompting<td></tr>
+</table>
+</p>
+
+<details>
+  <summary>
+  <p>
+  <u>[view/hide]</u>
+  Details of Transformers and their components.
+  </p>
+  </summary>
+
+Briefly, definitions of a few more constructs in order to understand the Transformer architecture:
+
 <br/>
-
-Briefly, definitions of a few constructs:
-
-<br/>
-
 
 <p><em>Vector embeddings</em></p> are ways to represent data in a compact, binned (grouped)
 manner.  For instance, if a language had a million words, 
-a vector would be 1 million elements in length if each word was an element. The
-vector would have 1 million indices.
-Words can be grouped by meanings or some unknown aspects to make far fewer than a million indices.
-Efficient embeddings may have latent groupings that are not easy to interpret,
+a vector would be 1 million elements in length if each word was an element. The length of a vector is also the number of indices on the vector.
+Words can be grouped by meanings or some unknown aspects to make far fewer than a million indices.  
+For example instead of a vector of [dog, cat, fence, sidewalk] with 4 indices, one could make a vector of [[dog or cat], fence, sidewalk] 
+with 3 indices. The vector elements are placeholders for existence
+of that object. 
+Text grouped into such a "compressed" vector are the embeddings. 
+Efficient embeddings may have latent (hidden) groupings that are not easy to interpret,
 and they may share the same embedded vector space with objects of different
-types (modalities, e.g. image and text and audio embeddings sharing the same vector embedding space).
-<p><em>Distances</em></p> as differences or similarities between embeddings are part
-of what is needed to calculate model objectives efficiently.  
-Objectives such as minimizing cross-entropy losses, use of
-K-L divergence, Jenson-Shannon divergence, constrastive learning, etc.
-can be used in training Neural Network (NN) models.
-(TODO: follow-up on training multimodal embeddings.)
+types (types being modalities, e.g. image, text, audio, or measurements that have embeddings that share the same vector embedding space). 
 There are
 <ul>
 <li>embeddings that represent meaning, and
 </li>
-<li>embeddings that represent position within their context such as the position
+<li>encoding that are like embeddings that represent position within their context such as the position
 or words in a sentence or relative to another word.
 </li>
 </ul>
 
-<p><em>Attention from Embedding Distances</em></p>
+<p><em>Distances</em></p> as differences between a model output representation
+and a representation of ground truth or replacement for it are part
+of what is needed to calculate model objectives efficiently.  The model,
+in the training stage, is an optimization problem and the objective is a
+function to minimize. 
+Objectives with losses such as cross-entropy,
+K-L divergence or Jenson-Shannon divergence, use of contrastive learning, etc.
+can be used.
 
-The transformer architecture was influenced by noticing that 
-"end-to-end" memory networks use a recurrent attention mechanism
-to perform well on simple question and answer tasks and language
-modeling tasks.
-Details of the "end-to-end" memory network help to understand the Transformer
-architecture.
+<p><em>Sequence</em></p> is an ordered set of elements.
 
-<br/>
-<br/>
-
-The "end-to-end" memory network is a query answer model.
-<code>
-
-<br/>
-{x_i} is the input set of data to be stored in memory.
-<br/>
-The set {x_i} is converted to embedded memory vectors {m_i} by
-embedding matrix A, and they have dimension d.
-<br/>
-A query q is converted to embedding u by an embedding matrix B.
-<br/>
-The probability of matching u to any m_i
-   is the softmax of their inner products:
-<br/>
-<math xmlns="http://www.w3.org/1998/Math/MathML"
-alttext="p_i = softmax(transpose(u)⋅m_i)">
-<mrow>
-<msub> <mi>p</mi> <mn>i</mn></msub>
-<mo>=</mo>
-<mo>softmax</mo>
-<mo>(</mo>
-<msup> <mi>u</mi> <mo>T</mo> </msup>
-<mo>⋅</mo>
-<msub> <mi>m</mi> <mn>i</mn> </msub>
-<mo>)</mo>
-</mrow>
-</math>
-
-where 
-
-<math xmlns="http://www.w3.org/1998/Math/MathML"
-alttext="Softmax(z_i) = exp(z_i)/sum_{over j}(exp(z_j))">
-<mrow>
-<mo>softmax</mo>
-<mo>(</mo>
-<msub> <mi>z</mi><mn>i</mn></msub>
-<mo>)</mo>
-<mo>=</mo>
-    <msup><mi>e</mi> 
-      <msub> <mi>z</mi><mn>i</mn></msub>
-    </msup>
-<mo>/</mo>
-    <msub> <mo>&sum;</mo><mn>j</mn></msub>
-    <mo>(</mo>
-      <msup><mi>e</mi> <msub> <mi>z</mi><mn>j</mn></msub> </msup>
-    <mo>)</mo>
-</mrow>
-</math>
-
-<br/>
-
-x_i is converted to the output embedding vector c_i by embedding
-matrix C.
-<br/>
-Then the response vector from memory o is
-
-<math xmlns="http://www.w3.org/1998/Math/MathML"
-alttext="o = sum_{over i}(p_i * c_i)">
-<mrow>
-<mi>o</mi>
-<mo>=</mo>
-<msub> <mo>&sum;</mo><mn>i</mn></msub>
-<mo>(</mo>
-  <msub> <mi>p</mi><mn>i</mn></msub> 
-<mo>&middot;</mo>
-  <msub> <mi>c</mi><mn>i</mn></msub> 
-<mo>)</mo>
-</mrow>
-</math>
-
-The function is smooth, enabling gradients and back-propagation.
-So far, this is not so different from a "Two-Tower" DNN model construction
-before defining the number of layers.
-</code>
-
-<br/>
-<br/>
-
-The single layer "end-to-end" has final prediction:
-<code>
-  a_est = softmax(W(o+u))
-    where W is a final weight matrix.
-
-    All 3 embedding matrices A, B, and C as well as W are jointly learned
-    during training by minimizing a standard cross-entropy loss between
-    a_est and the true label a.</p>
-</code>
-
-<br/>
-The multiple layer "end-to-end" with K layers gives the input query embedding
-to the first layer, and thereafter, the output of each layer is given as
-input to the next layer.
-<code>
-   u of (layer k+1) = u of (layer k) + o of (layer k)
-   <br/>
-   each layer k has its own embedding matrices A of layer k, C of layer k though they are
-   constrained to keep number of parameters small.
- The final prediction is:
-   a_est = Softmax(W * u of (layer k+1)) = Softmax(W * (o of (layer k) + u of (layer k)).
-The end-to-end memory network authors found that some layers concentrate
-only on nearby words while other layers have broad attention over all
-memory locations.
-</code>
-
-<p>The Transformer continues with far more positional attention in its 
-architecture.</p>
-
-<u>The transformer architecture</u>
-<p> There is an encoder and a decoder. </p> 
-The encoder maps
-the input representation sequence
+<p><em>Encoder-Decoder Architecture</em></p>
+The encoder maps the input representation sequence
 <math alttext="{x_1, x_2, ...x_n}"> 
 <mrow><mo>{</mo>
 <msub> <mi>x</mi><mn>1</mn></msub> <mo separator="true">,</mo>
@@ -319,7 +206,7 @@ the input representation sequence
 <mo>&hellip;</mo> <msub> <mi>x</mi><mn>n</mn></msub>
 <mo>}</mo>
 </mrow> </math>
-to a sequence of 
+to a latent sequence 
 <math alttext="{z_1, z_2, ...z_n}"> 
 <mrow><mo>{</mo>
 <msub> <mi>z</mi><mn>1</mn></msub> <mo separator="true">,</mo>
@@ -328,7 +215,8 @@ to a sequence of
 <mo>}</mo>
 </mrow> </math>
 which are continuous representations.
-The z are inputs to the decoder which generates symbols 
+The sequence z are inputs to the decoder which generates 
+ouptut symbols 
 <math alttext="{y_1, y_2, ...y_m}"> 
 <mrow><mo>{</mo>
 <msub> <mi>y</mi><mn>1</mn></msub> <mo separator="true">,</mo>
@@ -338,43 +226,58 @@ The z are inputs to the decoder which generates symbols
 </mrow> </math>
 one at a time.
 
-<p>Encoder:</p> 
-The encoder is composed of a stack of
-  N = 6 identical layers.
-  Each layer has two sub-layers.
-    The first sub-layer is a multi-head self-attention mechanism
-    The second sub-layer is a simple, position-wise fully connected feed-forward network.
-  The output of each sub-layer is LayerNorm(x + Sublayer(x)) where Sublayer(x)
-  is the function implemented by that specific sub-layer and LayerNorm is a
-  normalization function.
-  The output dimension is the same size for all embedding layers and sub-layers.
+<p><em>Feed Forward Network</em></p> is a network composed of 
+a series of one or more layers
+that accept input and output a result.  A layer multiplies the input
+by a weight matrix, adds a bias vector and then can put that mesulting
+matrix through an activation function resulting in the output for that
+layer.  The activation function makes non-linearity possible to express.  The output of one layer is an input for the next layer.
 
-<p> Decoder:</p> 
-The decoder is composed of a stack of
-  N = 6 identical layers.
-  The same 2 sub-layers of the encoder.
-  A third sub-layer performs multi-head attention over the
-  output of the encoder stack.
-  The output of each sub-layer is LayerNorm(x + Sublayer(x)) where Sublayer(x).
-  Masking: the self-attention sub-layer is modified to prevent
-  use of subsequent positions (attention is paid to past positions only).
-  Like the end-to-end memory model, the output embeddings are all offset by
-  1 position from one another, so combined with masking, produces predictions
-  for i that depend upon known inputs from positions less than i.
+<p><em>Position-wise Feed Forward Network</em></p> is a 
+Feed Forward Network with 2 layers.  
+For each position in the sequence separately
+and identically, the network layers are  
+defined as 
+<math alttext="2 layer FFN"> 
+<mrow>
+<mo>FFN</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo>
+<mo>max</mo><mo>(</mo>
+0, <mi>x</mi><mo>&middot;</mo>
+<msub> <mi>W</mi><mn>1</mn></msub>
+<mo>+</mo>
+<msub> <mi>b</mi><mn>1</mn></msub>
+<mo>)</mo>
+<mo>&middot;</mo>
+<msub> <mi>W</mi><mn>2</mn></msub>
+<mo>+</mo>
+<msub> <mi>b</mi><mn>2</mn></msub>
+</mrow> 
+</math>
 
-<p> Attention:</p>  
-query, keys, and values are embedding vectors.
-The attention function maps a query and set of key-value pairs to an output.
-The output is a weighted sum of the values.
-The weight for each value is calculated by compatability of query with key.
+<p><em>Attention</em></p> determines the importance of each component in a sequence relative to
+the other components in that sequence (self-attention) or another
+sequence.  In context of a transformer, the components of the sequence are tokens.
+<ul>
+<li>Attention allows a sequence element access to other sequence elements that are not necessarily its predecessor in terms of order.
+</li>
+<li>The attention score allows a model to focus on an important relationship.
+</li>
+<li>The goal of attention is to calculate a "context vector" that is the weighted sum of all input element attention scores w.r.t. a current task.
+</li>
+</ul>
 
-<p>Scaled Dot-Product Attention:</p>
-  The query and key embeddings have dimension 
+<p><em>Scaled Dot Product Attention</em></p> is a form of Self-Attention mechanism.  An attention score is calculated from a 
+ query vector q, key vector k, and value vector v.
+<ul>
+<li> 
+   The query and key vectors have dimension 
 <math alttext="d_k"> <mrow><msub> <mi>d</mi><mn>k</mn></msub></mrow> </math>
- The value embeddings have dimension 
+ The value vectors have dimension 
 <math alttext="d_v"> <mrow><msub> <mi>d</mi><mn>v</mn></msub></mrow> </math>
-
-For a given q
+   </li>
+</li>
+<li>
+For a given q, 
 <math xmlns="http://www.w3.org/1998/Math/MathML"
 alttext="attention = sum_{over i}( softmax(q * k_i / sqrt(d_k)) * v_{k_i} )">
 <mrow>
@@ -396,7 +299,9 @@ alttext="attention = sum_{over i}( softmax(q * k_i / sqrt(d_k)) * v_{k_i} )">
 <mo>)</mo>
 </mrow>
 </math>
-In matrix form
+</li>
+<li>
+In matrix form, 
 <math xmlns="http://www.w3.org/1998/Math/MathML"
 alttext="attention = softmax(Q*K^T/sqrt(d_k)) * V">
 <mrow>
@@ -406,151 +311,178 @@ alttext="attention = softmax(Q*K^T/sqrt(d_k)) * V">
   <mo>transpose</mo><mo>(</mo><mi>K</mi><mo>)</mo>
   <mo>&divide;</mo><mo>sqrt</mo><mo>(</mo><msub> <mi>d</mi><mn>k</mn> </msub>
   <mo>)</mo> <mo>)</mo> <mo>&middot;</mo> <mi>V</mi>
+</li>
+</ul>
 
+<p><em>Multi-Head Attention</em></p> is an extension of Self-Attention 
+mechanism.  The "heads" refers to multiple, independent attention calculations that are performed in parallel.
+The input is partitioned into several parts, each processed thru
+a different attention head.
+<ul>
+<li>
+Each head has its own set of learnable linear projections (weights)
+for the query (Q), key (K), and value (V) vectors.
+</li>
+<li> For each head (partition), 
+the Scaled Dot Product Attention is calculated in parallel.
+</li>
+<li> The results from each head are concatenated into a single vector and
+     passed through a final linear layer resulting in the final output.
+</li>
+</ul>
+Multi-Head Attention, in addition to being an efficient mechanism, also allows
+each head to learn a different aspect of relationships.  For example,
+one head might learn to attend to grammatical relationships
+while another might attend to semantic relationships.
 
-<p> Multi-Head Attention:</p> 
-replaces the single attention function in the 3rd sub-layer by this algorithm.
-For h number of times, perform the following:
-a linear projection of the queries, keys and values to
-learned projections having dimensions 
-<math alttext="d_k"> <mrow><msub> <mi>d</mi><mn>k</mn></msub></mrow> </math>,
-<math alttext="d_k"> <mrow><msub> <mi>d</mi><mn>k</mn></msub></mrow> </math>,
-and <math alttext="d_v"> <mrow><msub> <mi>d</mi><mn>v</mn></msub></mrow> </math>, respectively.
-One can perform the attention function for each q, k, v in parallel.
-The outputs are each of dimension 
-<math alttext="d_v"> <mrow><msub> <mi>d</mi><mn>v</mn></msub></mrow> </math>.
+<p><em>Residual Network Block</em></p> is a block that uses
+shorcut connections, a.k.a. skip connections to allow a model
+to essentially skip a layer without making a discontinuity in
+the gradients during back propagation.
+The residual function result is
+the output of its own block layers plus
+the original input to the block.
+<ul>
+<li>
+ x: input to a block of layers
+</li>
+<li>
+  F(x): output of the block's layers
+</li>
+<li>
+  H(x) = F(x) + x is the final output of the residual block
+</li>
+</ul>
+If a layer is not helpful, the model learns to make F(x) close to 0.
+The shortcut connection creates direct path for gradient to
+backpropagate to earlier layers, preventing vanishing gradients.
 
-These h output values are concatenated and then projected.
-<math alttext="MultiHead(Q, K, V ) = Concat(head1, ..., headh)*W^O"> 
+<p><em>Weight Tying (sharing)</em></p> is the sharing of a matrix between
+different components of the model in order to reduce the number of 
+free parameters that the model must learn. 
+
+<p><em>Linear Layer</em></p> in a neural network is a layer that 
+multiplies the input by a weight matrix and adds a weight vector.
+
+<p><em>Softmax Layer</em></p> is a layer that applies the softmax operator
+to the input, resulting in output components that are normalized.
+<ul>
+<li>
+<math xmlns="http://www.w3.org/1998/Math/MathML"
+alttext="sum exp(c) = sum_{i=1,n}(exp(c_i)">
 <mrow>
-<mi>MultiHead</mi><mo>(</mo><mi>Q</mi><mo separator="true">,</mo>
-<mi>K</mi><mo separator="true">,</mo> <mi>V</mi> <mo>)</mo>
+<mi>softmax(c_i)</mi>
 <mo>=</mo>
-<mi>Concat</mi><mo>(</mo>
-<msub> <mi>head</mi><mn>1</mn></msub><mo separator="true">,</mo> <mo>&hellip;</mo> <msub> <mi>head</mi><mn>h</mn></msub>
-<mo>)</mo>
-<mo>&middot;</mo>
-<msup> <mi>W</mi><mn>Q</mn></msup>
-</mrow> </math>
-
-<br/>
-where
-<math alttext="headi = Attention(Q*Wi^Q, K*Wi^K, V*Wi^V)"> 
 <mrow>
-<msub><mi>head</mi><mn>i</mn></msub>
-<mo>=</mo>
-<mi>Attention</mi><mo>(</mo>
-<mi>Q</mi><mo>&middot;</mo>
-<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>Q</mi> </msup>
-<mo separator="true">,</mo>
-<mi>K</mi><mo>&middot;</mo>
-<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>K</mi> </msup>
-<mo separator="true">,</mo>
-<mi>V</mi><mo>&middot;</mo>
-<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>V</mi> </msup>
-<mo>)</mo>
-</mrow></math>
-
-The projections are parameter matrices
-<br/>
-<math alttext="Wi^Q ∈ R^(d_model × d_k)"> <mrow>
-<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>Q</mi> </msup>
-<mo>&isinv;</mo>
-<msup> <mi>&Ropf;</mi> <mrow> <msub><mi>d</mi><mn>model</mn></msub> 
-    <mo>&times;</mo> <msub><mi>d</mi><mn>k</mn></msub> </mrow> </msup>
-</mrow></math>
-  
-<br/>
-<math alttext="Wi^K ∈ R^(d_model × d_k)"> <mrow>
-<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>K</mi> </msup>
-<mo>&isinv;</mo>
-<msup> <mi>&Ropf;</mi> <mrow> <msub><mi>d</mi><mn>model</mn></msub> 
-    <mo>&times;</mo> <msub><mi>d</mi><mn>k</mn></msub> </mrow> </msup>
-</mrow></math>
+<mo>exp</mo><mo>(</mo><msub><mi>c</mi><mn>i</mn> </msub> <mo>)</mo>
+</mrow>
+<mo>&divide;</mo>
+<mrow>
+<munderover>
+<mo>&sum;</mo>
+<mrow> <mi>i</mi> <mo>=</mo> <mn>1</mn> </mrow>
+<mi>n</mi>
+</munderover>
+<mo>exp</mo><mo>(</mo><msub><mi>c</mi><mn>i</mn> </msub> <mo>)</mo>
+</mrow>
+</math>
+</li>
+</ul>
 
 <br/>
-<math alttext="Wi^V ∈ R^(d_model × d_k)"> <mrow>
-<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>V</mi> </msup>
-<mo>&isinv;</mo>
-<msup> <mi>&Ropf;</mi> <mrow> <msub><mi>d</mi><mn>model</mn></msub> 
-    <mo>&times;</mo> <msub><mi>d</mi><mn>k</mn></msub> </mrow> </msup>
-</mrow></math>
+<p><em>The Transformer</em></p> 
+is a sequence-to-sequence model, and the original transformer is
+composed of the above components.
 
 <br/>
-and 
-<br/>
-<math alttext="Wi^O ∈ R^(d_model × d_k)"><mrow> 
-<msup> <msub> <mi>W</mi><mn>i</mn> </msub> <mi>O</mi> </msup>
-<mo>&isinv;</mo>
-<msup> <mi>&Ropf;</mi> <mrow> <msub><mi>d</mi><mn>model</mn></msub> 
-    <mo>&times;</mo> <msub><mi>d</mi><mn>k</mn></msub> </mrow> </msup>
-</mrow></math>
+<img src="https://arxiv.org/html/1706.03762v7/extracted/1706.03762v7/Figures/ModalNet-21.png"/>
+
+Figure 1 from 
+<a href="#attn_ref">Vaswani et al. NIPS 2017</a>)
+shows that the canonicalized, tokenized inputs are  
+transformed into embeddings and assigned positional encodings.
+The inputs are then put through an 
+encoder-decoder model.
+
+Both the encoder and decoder are using stacks of blocks of
+layers of multi-head attention, feed forward, and skip connection
+blocks along with normalization between blocks. 
 
 <br/>
-   In the paper they use h=8 parallel attention layers (a.k.a. heads), and
-<math alttext="d_k = d_v = d_model/h = 64"> 
-<mrow><msub> <mi>d</mi><mn>k</mn></msub>
-<mo>=</mo>
-<mrow><msub> <mi>d</mi><mn>v</mn></msub>
-<mo>=</mo>
-<mrow><msub> <mi>d</mi><mn>model</mn></msub><mo>&divide;</mo><mi>h</mi> 
-</mrow> </math>
-<mo>=</mo><mn>64</mn>.
+In the above figure, NX is N=6 identical layers in the encoder and
+N=6 identical layers in the decoder.
 
-Because of the reduced dimension of each 
-parallel attention layer, the total computational cost is similar to
-single-layer attention with full dimensionality.
+<p>Encoder:</p> 
+Each of the N=6 identical layers has a multi-head self-attention sub-layer
+followed by a simple position-wise fully connected feed-forward  network
+sub-layer.  Each sub-layer is in a residual block with
+output being LayerNorm(x + Sublayer(x)) where Sublayer(x)
+  is the function implemented by that specific sub-layer and LayerNorm is a
+  normalization function.
+The output dimension is the same size for all embedding layers and sub-layers.
 
-The original transformer's use of Multi-head Attention:
-<p>(A) in "encoder-decoder" attention layers:</p>
-    &#9735; Every position in the decoder attends over all positions in input sequence. (mimics sequence-to-sequence models)
+<p> Decoder:</p> 
+Each of the N=6 identical layers is a stack of
+the same 2 sub-layers of the encoder including the residual
+blocks and normalization, preceded by a sub-layer
+that is a masked multi-head attention over the encoder stack's output.
+Masking prevents the use of subsequent positions in the calculation.
+The output embeddings are all offset by
+  1 position from one another, so combined with masking, produce predictions
+  for i that depend upon known inputs from positions less than i.
+
 <br/>
-    query (q): previous decoder layer output
 <br/>
-    key   (k): encoder output
+
+The original transformer uses Multi-head Attention in the following ways:
+<ul>
+<li>
+in "encoder-decoder" attention layers:
 <br/>
-    value (v): encoder output
+&#9735; Every position in the decoder attends over all positions in input sequence. (mimics sequence-to-sequence models)
+  <ul>
+  <li>
+    query (q): from decoder output from previous layer
+  </li>
+  <li>
+    key   (k): from the memory encoder output from current layer
+  </li>
+  <li>
+    value (v): from the memory encoder output from current layer
+  </li>
+  </ul>
+</li>
+<li> in encoder self-attention layers:
 <br/>
-<p>(B) in encoder self-attention layers:</p>
     self-attention means query, keys and values are all from same place which
-    is the output of the previous layer in the encoder..
+    is the output of the previous layer in the encoder.
     <br/>
     &#9735; Each position in the encoder can attend to all positions in the previous
     layer of the encoder.
+    <ul>
+    <li>
+    query (q): from memory encoder output from previous layer
+    </li>
+    <li>
+    key   (k): from memory encoder output from previous layer
+    </li>
+    <li>
+    value (v): from memory encoder output from previous layer
+    </li>
+    </ul>
+</li>
+<li> in decoder self-attention layers:
 <br/>
-    query (q): previous encoder layer output
-<br/>
-    key   (k): same as q and v, they are output of encoder's previous layer
-<br/>
-    value (v): same as q and k
-<br/>
-<p>(C) in decoder self-attention layers:</p>
     self-attention means query, keys and values are all from same place which
-    is the output of the previous layer in the decoder..
-    to preserve auto-regressive property, leftward information flow is
+    is the output of the previous layer in the decoder.
+    To preserve auto-regressive property, leftward information flow is
     prevented by masking out (set to − &infin;) all values in the input of
     the softmax that are illegal connections.
     <br/>
     &#9735; Each position in decoder attends to all positions in the
        decoder's previous layer.
-<br/>
-<br/>
-Each layer in the network encoder and decoder also has a fully connected
-feed-forward network applied to each position separately and identically
-to provide non-linearity.
-<math alttext="FFN(x) = max(0, x*W1 + b1)*W2 + b2"> 
-<mrow><mo>FFN</mo><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mo>max</mo><mo>(</mo>
-<mi>0</mi><mo separator="true">,</mo>
-<mi>x</mi><mo>&middot;</mo><mi>W1</mi><mo>&plus;</mo><mi>b1</mi><mo>)</mo>
-<mo>&middot;</mo><mi>W2</mi><mo>&plus;</mo><mi>b2</mi>
-</mrow> </math>
-<br/>
-Positional encodings of dimension 
-<math alttext="d_model"> <mrow><msub> <mi>d</mi><mn>model</mn></msub></mrow> </math>,
-are made and put at bottom
-of encoder and decoder stacks.  each position pos and dimension i
-is represented in the positional encoding 2*i+1 a sine function and
-the adjacent dimension (2*i+1) by a cosine function.
+</li>
+</ul>
 </details>
 
 <p> Characteristics that Vaswanis et al improved with their Transformer architecture:</p>
@@ -567,8 +499,235 @@ the adjacent dimension (2*i+1) by a cosine function.
  </li>
 </ol>
 
+<p><em>LLMs</em></p>
+
+There are variants of encoder, decoder and encoder-decoder architectures
+of LLMs, but the most recent are based upon a decoder-only transformers
+in Mixture of Experts architecture.
+
+<br/>
+<br/>
+
+<details>
+  <summary>
+  <p>
+  <u>[view/hide]</u>
+  A list of modern LLMs.
+  </p>
+  </summary>
+
+<ul>
+<li>in 2018, GPT-1 (Generative pre-trained transformer version 1) 
+was released by OpenAI as a decoder-only model.
+Its capabilities were text generation, language translation,
+creation of content, and question answering.
+<br/>
+Innovations:
+<ul>
+<li>combining transformers</li>
+<li>unsupervised pre-training followed by supervised fine-tuning
+making training on large corpus of data and long context windows 
+easier</li>
+<li>task-aware input transformations for textual entailment and question answering</li>
+</ul>
+</li>
+
+<li>in 2018, BERT (Bidirectional Encoder Represenations from 
+Transformers) was released by Google as an encoder-only model.
+Its capabilities were deeper understanding of context, useful
+for example in question-answering, sentiment analysis, and 
+natural language inference, among others.
+<br/>
+Innovations:
+<ul>
+<li>trained on a masked language model objective </li>
+<li>next sentence prediction loss</li>
+</ul>
+</li>
+
+<li>in 2019, GPT-2 
+was released by OpenAI as a decoder-only transformer model.
+Its capabilites were significant improvements in GPT-1 capabilities
+including more human-like responses, longer context windows, and
+better reasoning.  It also was able to provide results on content
+it was not trained on (no out-of-vocabulary errors, essentially).
+<br/>
+Innovations:
+<ul>
+<li>10-fold increase in parameter count (=1.5 billion)
+and size of training dataset compared to GPT-1</li>
+</ul>
+</li>
+
+<li>in 2020, 2022, and 2023, GPT-3, GPT3.5, and GTP-4, respectively
+were released by OpenAI as decoder-only transformer models.
+Their capabilites were significant improvements over GPT-2 capabilities
+including better coherent results over longer context windows,
+less instruction needed, 
+and better generalization across many NLP tasks.
+GPT-4 additionally had multi-modal image and text training allowing
+it to output text outputs from image inputs, and it was able to
+solve complex tasks in math, coding, vision, medicine, law,
+and psychology without specialized instruction.
+</li>
+
+<li> in 2021 LamDA was released by Google as a
+decoder-only transformer model capable of open-ended conversations.
+</li>
+
+<li> in 2021 Gopher was released by DeepMind as a
+decoder-only transformer model capable of 
+text generation, language translation, creative content generation,
+and question answering.
+It had 280 billion parameters.
+</li>
+
+<li> in 2021 GLaM was released by Google as a 
+sparsely-activated mixture-of-experts model of 
+encoder-decoder transformer models.
+It had 1.2 trillion parameters.
+<br/>
+Innovations:.
+<ul>
+<li>In training it used 1⁄3 of the energy needed to train GPT-3.</li>
+<li>In inference it needed half og the FLOPs used by GPT-3 while
+achieving better performance.</li>
+</ul>
+</li>
+
+<li> in 2022 Chinchilla was released by DeepMind as a decoder-only
+transformer model.
+<br/>
+Innovations:
+<ul>
+<li>added compute optimal scaling laws that focused on 
+increasing the model parameter count along with
+scaling dataset size while conserving quality.
+</li>
+</ul>
+</li>
+
+<li> in 2022 PaLM was released by Google as a decoder-only
+transformer model.
+Its capabilities were common sense reasoning,
+arithmetic reasoning, joke explanation, code generation, 
+and translation.
+It had 540 billion parameters.
+<br/>
+Innovations:
+<ul>
+<li>ability to scale efficiently using the Google Pathways system
+</li>
+</ul>
+</li>
+
+<li> in 2023 PaLM2 was released by Google as a decoder-only
+transformer model.
+Its capabilities improved upon PaLM and added 
+advanced reasoning tasks, including code generation using
+a model with fewere parameters than PaLM.
+<br/>
+</li>
+
+<li> in 2023-now Gemini was released by Google as decoder-only
+transformer models that use Mixture of Experts architecture.
+Their capabilities include improvements in scalability, and inference
+efficiency.
+Gemini 2.5 Pro capabilities include reasoning
+over complex problems in code, math, and STEM, as well as analyzing large datasets, codebases, and documents using long context window of up to
+1 million tokens.
+It supports structured outputs, function calling, search grounding,
+thinking (see previous sentence), url context, caching, 
+code execution, and batch mode inference.
+<br/>
+Innovations:
+<ul>
+<li>offers a family of models optimized for different sizes </li>
+</ul>
+
+<li> in 2024-now Gemma was released by Google DeepMind 
+as decoder-only
+transformer models that are open source.
+They're built upon the same research and technology used to create 
+the Gemini family of models.
+Can accept text or image imputs. Capabilities include function 
+calling, complex analysis and generation tasks
+and support for over 140 languages.
+<br/>
+Innovations:
+<ul>
+<li>open-source models with high quality documentation, maintenance,
+updates, and support for small footprint models
+</li>
+</ul>
+</li>
+
+<li> in 2023-now LLaMA was released by Meta AI
+as decoder-only transformer models.
+Its capabilities are advanced text and code generation,
+complex reasoning and instruction following,
+support for over 200 languages, and a broad knowledge base.
+<br/>
+Innovations:
+<ul>
+<li>offers a family of models optimized for different sizes </li>
+<li>LLaMA context window of 4096 tokens improved its conversation 
+abilities
+</li>
+<li>a focus on improving safety</li>
+</ul>
+</li>
+
+<li> in 2023-2024 Mixtral was released by Mixtral AI
+as Mixture of Experts architecture composed from
+decoder-only transformer models.
+Its capabilities include math, code generation, multilingual tasks,
+instructions/
+</li>
+
+<li> in 2024-now O1 was released by Open AI
+as mixture-of-experts models composed from 
+decoder-only transformer models.
+Its capabilities are scientific reasoning tasks, math,
+comprehension of physics, biology, and chemistry,
+code generation.
+<br/>
+Innovations:
+<ul>
+<li>complex reasoning abilities honed through reinforcement learning.
+</li>
+</ul>
+</li>
+
+<li> in 2023-now Deepseek was released by DeepSeek
+as mixture-of-experts models composed from
+decoder-only transformer models.
+<br/>
+Innovations:
+<ul>
+<li>
+Group Relative Policy Optimization (GRPO) training for 
+Reinforcement-Learning (RL)
+uses a reward function that is a reponse normalized by the
+group's average response.
+</li>
+<li>
+multi-stage training process to address early model poor results:
+supervised fine-tuning, pure-RL, rejection sampling,
+followed by supervised fine-tuning and RL
+</li>
+</ul>
+</li>
+
+</ul>
+
+There continue to be many other new LLMs models.
+
+</details>
+
 <h3 id="lifecycle">(2) LifeCycle</h3>
-The first steps are defining the goal of the project, finding a stable, robust source of data for it,
+The first steps in building a Gen AI application
+are defining the goal of the project, finding a stable, robust source of data for it,
 and building the smallest working version of pieces to explore the feasibility of it.
 With a confirmed feasible goal, one can then further define the application.
 B.T.W. the contest requirement was to use generative AI as a uniquely valuable tool in an application
@@ -837,14 +996,14 @@ course on Generative AI and providing great examples and resources for us to use
      <a href="https://kaggle.com/competitions/gen-ai-intensive-course-capstone-2025q1">Gen AI Intensive Course Capstone 2025Q1</a>, Howard et al. 2025, Kaggle
 
   </li>
-  <li> Foundational Large Language Models and Text Generation
+  <li id="llm_ref"> Foundational Large Language Models and Text Generation
       (<a href="https://drive.google.com/file/d/1rYu-mIcsTrAeCuH-xHPofrI1i1qNVzqO/view?usp=drive_link">Barektain et al. 2025</a>)
   </li>
-  <li> Attention is All You Need
+  <li id="attn_ref"> Attention is All You Need
       (<a href="https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf">Vaswani et al. NIPS 2017</a>)
   </li>
   <li>End-To-End Memory Network (
-     <a href="https://paperswithcode.com/paper/end-to-end-memory-networks">Sukhbaatar et al. NeurIPS 2015</a>)
+     <a href="https://arxiv.org/abs/1503.08895">Sukhbaatar et al. NeurIPS 2015</a>)
   </li>
   <li>Stanford CS 236 (
 <a href="https://deepgenerativemodels.github.io/notes/index.html">Videos</a>,
