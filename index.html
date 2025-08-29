@@ -32,11 +32,17 @@ the user is interested in.  Large Language Models (LLMs) are used in validating
 user input, summarizing complex text for people without a medical background, 
 and evaluating the summarizations.</p>
 
-This is my capstone project for the
+<p>This is my capstone project for the
 <a href="https://www.kaggle.com/competitions/gen-ai-intensive-course-capstone-2025q1/overview">Google Kaggle 5-day Generative AI Course.</a>
 The application demonstrates a few uses of LLMs in a pipeline to produce easy to understand
 summarizations of the trial results.  My Kaggle application is 
 <u><a href="https://www.kaggle.com/code/nicholeasuniquename/clinical-trials-assistant/">here</a></u>.
+</p>
+
+<p>
+The agents that were created to validate input data and summarize text are talking to
+LLMs hosted by Google.  
+</p>
 
 <p>This blog (1) introduces LLMs, (2) highlights some of the application's lifecycle, and (3) presents
 highlights from the application.  References used in the blog are at the bottom of the article.</p>
@@ -162,7 +168,7 @@ higher quality results on language translations.</p>
   </p>
   </summary>
 
-Briefly, definitions of a few more constructs in order to understand the Transformer architecture:
+Briefly, definitions of a few more constructs in order to understand the Transformer architecture are introduced.
 
 <br/>
 
@@ -181,7 +187,7 @@ There are
 <ul>
 <li>embeddings that represent meaning, and
 </li>
-<li>encoding that are like embeddings that represent position within their context such as the position
+<li>encodings that are like embeddings that represent position within their context such as the position
 or words in a sentence or relative to another word.
 </li>
 </ul>
@@ -229,7 +235,7 @@ one at a time.
 <p><em>Feed Forward Network</em></p> is a network composed of 
 a series of one or more layers
 that accept input and output a result.  A layer multiplies the input
-by a weight matrix, adds a bias vector and then can put that mesulting
+by a weight matrix, adds a bias vector and then can put that resulting
 matrix through an activation function resulting in the output for that
 layer.  The activation function makes non-linearity possible to express.  The output of one layer is an input for the next layer.
 
@@ -255,8 +261,8 @@ defined as
 </math>
 
 <p><em>Attention</em></p> determines the importance of each component in a sequence relative to
-the other components in that sequence (self-attention) or another
-sequence.  In context of a transformer, the components of the sequence are tokens.
+the other components in another sequence or that same sequence (self-attention).
+In context of a transformer, the components of the sequence are tokens.
 <ul>
 <li>Attention allows a sequence element access to other sequence elements that are not necessarily its predecessor in terms of order.
 </li>
@@ -336,7 +342,7 @@ one head might learn to attend to grammatical relationships
 while another might attend to semantic relationships.
 
 <p><em>Residual Network Block</em></p> is a block that uses
-shorcut connections, a.k.a. skip connections to allow a model
+shortcut connections, a.k.a. skip connections to allow a model
 to essentially skip a layer without making a discontinuity in
 the gradients during back propagation.
 The residual function result is
@@ -501,13 +507,6 @@ in "encoder-decoder" attention layers:
 
 <p><em>LLMs</em></p>
 
-There are variants of encoder, decoder and encoder-decoder architectures
-of LLMs, but the most recent are based upon a decoder-only transformers
-in Mixture of Experts architecture.
-
-<br/>
-<br/>
-
 <details>
   <summary>
   <p>
@@ -515,6 +514,12 @@ in Mixture of Experts architecture.
   A list of modern LLMs.
   </p>
   </summary>
+
+There are variants of encoder, decoder and encoder-decoder architectures
+of LLMs, but the most recent are based upon a decoder-only transformers
+in Mixture of Experts architecture.
+
+<br/>
 
 <ul>
 <li>in 2018, GPT-1 (Generative pre-trained transformer version 1) 
@@ -721,23 +726,45 @@ followed by supervised fine-tuning and RL
 
 </ul>
 
-There continue to be many other new LLMs models.
+In addition to the large LLM foundation models, each of the cloud vendors
+and major LLM providers make task specific derivations of their models too.
+From Google there are Med-PaLM 2, Codey, Imogen, Veo, AdioLM, AudioPaLM models
+and/or APIs..
+From Amazon there are task specific derivations of Nova and Titan models including
+APIs like Amazon Comprehed Medical and Amazon Q APIs.
+From Microsoft there are task specific derivations of Copilot including APIs
+such as Medical Diagnostic AI, AI for Legal, Copilot for finance and more.
+From Meta AI there are Thinking LLMs and LLM Compiler.
+From Anthropic there are task specific derivations of Claude.
+
+There continue to be many other new LLMs models, some findable on HuggingFace.
 
 </details>
+
+
+<p>LLMs in general handle tasks such as text classification,
+question answering, document summarization, and text
+generation (including language translation).  Increasingly, more task specific
+LLMs are being made and task specific agents follow from that, and multi-agent
+systems of agents interacting with one another to accomplish tasks follow from that.
+</p>
 
 <h3 id="lifecycle">(2) LifeCycle</h3>
 The first steps in building a Gen AI application
 are defining the goal of the project, finding a stable, robust source of data for it,
-and building the smallest working version of pieces to explore the feasibility of it.
-With a confirmed feasible goal, one can then further define the application.
+and building the smallest working version to explore the feasibility of it.
 B.T.W. the contest requirement was to use generative AI as a uniquely valuable tool in an application
 which would otherwise be less capable of accomplishing its real world goals.
 For this I created a clinical trials assistant from multiple gen-AI agents.
 
-First results from hand picked articles which had complex medical terms showed that
-text summarization by the Gemini-2-*, Gemini-1-* and Gamma-3-* models gave very good 
+<br/>
+To create the protoype, I first hand picked published clinical trial articles
+which had complex medical terms.  
+Using Google AI Studio for text summarization 
+by the Gemini-2-*, Gemini-1-* and Gamma-3-* models gave very good 
 results that did not require a medical background to understand.
-The prompts I used were simple and instructive zero-shot prompts.   I used deterministice
+The prompts I used were simple and instructive zero-shot prompts.   
+I used deterministice
 generative settings (temperature=0) with all agents.
 Neither model fine-tuning, nor parameter efficient tuning were deemed to be
 necessary for this prototype.
